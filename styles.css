@@ -667,3 +667,80 @@ input:focus, select:focus, textarea:focus {
     align-items: flex-start;
   }
 }
+
+
+/* GRADUS v0.3: edición básica, banco de preguntas y limpieza de registros */
+.collapsible {
+  margin-bottom: 18px;
+}
+
+.collapsible > summary {
+  cursor: pointer;
+  font-weight: 850;
+  color: var(--primary);
+  list-style: none;
+}
+
+.collapsible > summary::-webkit-details-marker { display: none; }
+
+.collapsible > summary::after {
+  content: "";
+  display: inline-block;
+  width: .55rem;
+  height: .55rem;
+  margin-left: .65rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.collapsible[open] > summary::after { transform: rotate(225deg) translateY(-1px); }
+
+.inner-collapsible {
+  border: 1px solid rgba(15,61,53,.09);
+  border-radius: 18px;
+  background: rgba(255,255,255,.58);
+  padding: 14px;
+  margin: 6px 0 18px;
+}
+
+.inline-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.tiny-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(15,61,53,.08);
+  color: var(--primary);
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+.tiny-button:hover { background: rgba(15,61,53,.14); }
+.danger-text { color: var(--danger); background: var(--danger-soft); }
+
+.subtle-note {
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.options-list {
+  margin: 8px 0 0 1.15rem;
+  padding: 0;
+  color: var(--muted);
+}
+
+.question-item {
+  align-items: flex-start;
+}
+
+.question-list .list-item strong {
+  line-height: 1.35;
+}
+
+.subject-form { margin-top: 16px; }

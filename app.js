@@ -1,6 +1,6 @@
-const APP_VERSION = '0.2';
-const STORAGE_KEY = 'gradus.v0.2.state';
-const LEGACY_STORAGE_KEY = 'gradus.v0.1.state';
+const APP_VERSION = '0.3';
+const STORAGE_KEY = 'gradus.v0.3.state';
+const LEGACY_STORAGE_KEYS = ['gradus.v0.2.state', 'gradus.v0.1.state'];
 
 const SEMESTERS = {
   all: 'Todo el curso',
@@ -211,7 +211,8 @@ const DEFAULT_STATE = {
       notes: 'Registrar preguntas exactas, temas y patrón de repetición.'
     }
   ],
-  attempts: []
+  attempts: [],
+  questions: []
 };
 
 let state = loadState();
@@ -232,6 +233,16 @@ function clone(value) {
   return typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value));
 }
 
+function slugify(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 48) || `asignatura-${Date.now()}`;
+}
+
 function normalizeSemester(value) {
   const normalized = String(value || '').toLowerCase().trim();
   if (['primer_cuatrimestre', 'primer semestre', 'semestre 1', '1', '1º', 'primero'].includes(normalized)) return 'primer_cuatrimestre';
@@ -241,6 +252,7 @@ function normalizeSemester(value) {
 }
 
 function semesterLabel(value) {
+  if (value === 'all') return SEMESTERS.all;
   return SEMESTERS[normalizeSemester(value)] || SEMESTERS.pendiente;
 }
 
@@ -283,20 +295,22 @@ function normalizeState(rawState) {
     events: Array.isArray(rawState?.events) ? rawState.events : base.events,
     materials: Array.isArray(rawState?.materials) ? rawState.materials : base.materials,
     exams: Array.isArray(rawState?.exams) ? rawState.exams : base.exams,
-    attempts: Array.isArray(rawState?.attempts) ? rawState.attempts : []
+    attempts: Array.isArray(rawState?.attempts) ? rawState.attempts : [],
+    questions: Array.isArray(rawState?.questions) ? rawState.questions : []
   };
 
   merged.events = merged.events.map(event => ({ ...event, id: event.id || cryptoRandomId(), semester: itemSemester(event) }));
   merged.materials = merged.materials.map(material => ({ ...material, id: material.id || cryptoRandomId(), semester: itemSemester(material) }));
   merged.exams = merged.exams.map(exam => ({ ...exam, id: exam.id || cryptoRandomId(), semester: itemSemester(exam) }));
   merged.attempts = merged.attempts.map(attempt => ({ ...attempt, id: attempt.id || cryptoRandomId(), semester: itemSemester(attempt) }));
+  merged.questions = merged.questions.map(question => ({ ...question, id: question.id || cryptoRandomId(), semester: itemSemester(question), frequency: Number(question.frequency || 1) }));
   merged.ui.semesterFilter = SEMESTERS[merged.ui.semesterFilter] ? merged.ui.semesterFilter : 'all';
   return merged;
 }
 
 function loadState() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY) || LEGACY_STORAGE_KEYS.map(key => localStorage.getItem(key)).find(Boolean);
     if (!saved) return normalizeState(DEFAULT_STATE);
     return normalizeState(JSON.parse(saved));
   } catch (error) {
@@ -346,6 +360,10 @@ function filteredAttempts() {
   return state.attempts.filter(matchesSemester);
 }
 
+function filteredQuestions() {
+  return state.questions.filter(matchesSemester);
+}
+
 function subjectName(id) {
   return subjectById(id)?.name || 'Sin asignatura';
 }
@@ -393,6 +411,7 @@ function statusBadge(status) {
 }
 
 function semesterBadge(value) {
+  if (value === 'all') return `<span class="badge neutral">${SEMESTERS.all}</span>`;
   const semester = normalizeSemester(value);
   const kind = semester === 'primer_cuatrimestre' ? 'primary' : semester === 'segundo_cuatrimestre' ? 'success' : semester === 'anual' ? 'warning' : 'neutral';
   return `<span class="badge ${kind}">${semesterLabel(semester)}</span>`;
@@ -674,18 +693,60 @@ function attemptFromRow(row) {
   };
 }
 
+function rowFromQuestion(question) {
+  return {
+    user_id: authSession.user.id,
+    id: question.id,
+    subject_id: question.subjectId,
+    exam_id: question.examId || null,
+    semester: itemSemester(question),
+    question_type: question.questionType || 'pendiente',
+    topic: question.topic || null,
+    statement: question.statement,
+    options: question.options || null,
+    correct_answer: question.correctAnswer || null,
+    explanation: question.explanation || null,
+    source_label: question.sourceLabel || null,
+    is_exact_historical: Boolean(question.isExactHistorical ?? true),
+    frequency: Number(question.frequency || 1),
+    difficulty: question.difficulty || null,
+    notes: question.notes || null
+  };
+}
+
+function questionFromRow(row) {
+  return {
+    id: row.id,
+    subjectId: row.subject_id,
+    examId: row.exam_id,
+    semester: row.semester,
+    questionType: row.question_type,
+    topic: row.topic,
+    statement: row.statement,
+    options: row.options,
+    correctAnswer: row.correct_answer,
+    explanation: row.explanation,
+    sourceLabel: row.source_label,
+    isExactHistorical: row.is_exact_historical,
+    frequency: row.frequency,
+    difficulty: row.difficulty,
+    notes: row.notes
+  };
+}
+
 async function loadFromSupabase() {
   if (!supabaseClient || !authSession) return;
   try {
-    const [subjectsResult, eventsResult, materialsResult, examsResult, attemptsResult] = await Promise.all([
+    const [subjectsResult, eventsResult, materialsResult, examsResult, attemptsResult, questionsResult] = await Promise.all([
       supabaseClient.from('subjects').select('*').order('semester').order('name'),
       supabaseClient.from('academic_events').select('*').order('date'),
       supabaseClient.from('materials').select('*').order('created_at', { ascending: false }),
       supabaseClient.from('exams').select('*').order('year', { ascending: false }),
-      supabaseClient.from('simulation_attempts').select('*').order('date', { ascending: false })
+      supabaseClient.from('simulation_attempts').select('*').order('date', { ascending: false }),
+      supabaseClient.from('exam_questions').select('*').order('created_at', { ascending: false })
     ]);
 
-    const firstError = [subjectsResult, eventsResult, materialsResult, examsResult, attemptsResult].find(result => result.error)?.error;
+    const firstError = [subjectsResult, eventsResult, materialsResult, examsResult, attemptsResult, questionsResult].find(result => result.error)?.error;
     if (firstError) throw firstError;
 
     if (!subjectsResult.data?.length) {
@@ -701,7 +762,8 @@ async function loadFromSupabase() {
       events: eventsResult.data.map(eventFromRow),
       materials: materialsResult.data.map(materialFromRow),
       exams: examsResult.data.map(examFromRow),
-      attempts: attemptsResult.data.map(attemptFromRow)
+      attempts: attemptsResult.data.map(attemptFromRow),
+      questions: questionsResult.data.map(questionFromRow)
     });
     saveLocalState();
     setSyncStatus('Sincronizado con Supabase', 'online');
@@ -728,6 +790,7 @@ async function persistStateToSupabase({ immediate = false } = {}) {
     if (state.materials.length) operations.push(supabaseClient.from('materials').upsert(state.materials.map(rowFromMaterial), { onConflict: 'user_id,id' }));
     if (state.exams.length) operations.push(supabaseClient.from('exams').upsert(state.exams.map(rowFromExam), { onConflict: 'user_id,id' }));
     if (state.attempts.length) operations.push(supabaseClient.from('simulation_attempts').upsert(state.attempts.map(rowFromAttempt), { onConflict: 'user_id,id' }));
+    if (state.questions.length) operations.push(supabaseClient.from('exam_questions').upsert(state.questions.map(rowFromQuestion), { onConflict: 'user_id,id' }));
     const results = await Promise.all(operations);
     const firstError = results.find(result => result.error)?.error;
     if (firstError) throw firstError;
@@ -866,6 +929,7 @@ function renderEventList(events) {
         <strong>${escapeHtml(event.title)}</strong>
         <p>${escapeHtml(subjectName(event.subjectId))} · ${escapeHtml(event.type)} · ${formatDate(event.date)}</p>
         ${event.notes ? `<p>${escapeHtml(event.notes)}</p>` : ''}
+        <div class="inline-actions"><button class="tiny-button danger-text" data-delete-collection="events" data-delete-id="${escapeHtml(event.id)}">Eliminar fecha</button></div>
       </div>
       <div class="badge-stack">
         ${semesterBadge(itemSemester(event))}
@@ -966,6 +1030,35 @@ function renderMonthGrid(date) {
 
 function renderSubjects() {
   $('#asignaturas').innerHTML = `
+    <details class="card collapsible">
+      <summary>+ Añadir asignatura o completar una optativa</summary>
+      <form id="subjectForm" class="form-grid subject-form">
+        <label class="span-2">Nombre de la asignatura<input name="name" required placeholder="Nombre oficial de la asignatura"></label>
+        <label>Código<input name="code" placeholder="Código UNED"></label>
+        <label>Cuatrimestre
+          <select name="semester" required>
+            <option value="primer_cuatrimestre">Primer cuatrimestre</option>
+            <option value="segundo_cuatrimestre">Segundo cuatrimestre</option>
+            <option value="anual">Anual / TFG</option>
+            <option value="pendiente">Pendiente de clasificar</option>
+          </select>
+        </label>
+        <label>ECTS<input name="credits" type="number" min="0" max="30" step="0.5" value="6"></label>
+        <label>Tipo<input name="type" placeholder="Obligatoria, optativa, TFG..."></label>
+        <label>Riesgo
+          <select name="risk"><option value="medio">Medio</option><option value="alto">Alto</option><option value="bajo">Bajo</option></select>
+        </label>
+        <label>Progreso inicial<input name="progress" type="number" min="0" max="100" value="0"></label>
+        <label>Estado
+          <select name="status"><option value="por_configurar">Por configurar</option><option value="pendiente">Pendiente</option><option value="por_decidir">Por decidir</option><option value="revisado">Revisado</option></select>
+        </label>
+        <label class="span-2">Tipo de examen<input name="examType" placeholder="Test, desarrollo, mixto, trabajo..."></label>
+        <label class="span-2">Evaluación<textarea name="evaluation" rows="2" placeholder="Examen, PEC, porcentajes, mínimos..."></textarea></label>
+        <label class="span-2">Estrategia<textarea name="strategy" rows="2" placeholder="Prioridad, forma de estudio, patrón de exámenes..."></textarea></label>
+        <label class="span-2">Notas<textarea name="notes" rows="2" placeholder="Datos pendientes de confirmar, observaciones..."></textarea></label>
+        <button class="primary-action span-2">Guardar asignatura</button>
+      </form>
+    </details>
     <div class="toolbar">
       <input id="subjectSearch" type="search" placeholder="Buscar asignatura, código o tipo...">
       <select id="riskFilter">
@@ -978,6 +1071,35 @@ function renderSubjects() {
     </div>
     <div id="subjectList" class="subject-grid"></div>
   `;
+
+  $('#subjectForm').addEventListener('submit', event => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const name = String(formData.get('name') || '').trim();
+    if (!name) return;
+    const baseId = slugify(name);
+    const id = state.subjects.some(subject => subject.id === baseId) ? `${baseId}-${Date.now().toString(36)}` : baseId;
+    state.subjects.push(normalizeSubject({
+      id,
+      name,
+      code: String(formData.get('code') || 'Pendiente'),
+      semester: normalizeSemester(formData.get('semester')),
+      credits: Number(formData.get('credits') || 0),
+      type: String(formData.get('type') || 'Pendiente de clasificar'),
+      status: String(formData.get('status') || 'por_configurar'),
+      risk: String(formData.get('risk') || 'medio'),
+      progress: Number(formData.get('progress') || 0),
+      examType: String(formData.get('examType') || 'Pendiente de analizar'),
+      evaluation: String(formData.get('evaluation') || 'Pendiente de completar'),
+      notes: String(formData.get('notes') || ''),
+      strategy: String(formData.get('strategy') || 'Pendiente de decidir estrategia.')
+    }));
+    saveState();
+    state.ui.semesterFilter = activeSemesterFilter() === 'all' ? 'all' : state.ui.semesterFilter;
+    event.currentTarget.reset();
+    renderSubjects();
+  });
+
   const renderFiltered = () => {
     const query = $('#subjectSearch').value.toLowerCase().trim();
     const risk = $('#riskFilter').value;
@@ -1028,14 +1150,39 @@ function openSubject(id) {
   const subjectEvents = state.events.filter(event => event.subjectId === id).sort((a, b) => new Date(a.date) - new Date(b.date));
   const subjectMaterials = state.materials.filter(material => material.subjectId === id);
   const subjectExams = state.exams.filter(exam => exam.subjectId === id);
+  const subjectQuestions = state.questions.filter(question => question.subjectId === id);
   $('#subjectDialogTitle').textContent = subject.name;
   $('#subjectDialogBody').innerHTML = `
     <div class="kpi-row">
       <div class="kpi"><span>Código</span><strong>${escapeHtml(subject.code)}</strong></div>
       <div class="kpi"><span>Créditos</span><strong>${escapeHtml(subject.credits)} ECTS</strong></div>
       <div class="kpi"><span>Periodo</span><strong>${semesterLabel(subject.semester)}</strong></div>
-      <div class="kpi"><span>Riesgo</span><strong>${escapeHtml(subject.risk)}</strong></div>
+      <div class="kpi"><span>Preguntas</span><strong>${subjectQuestions.length}</strong></div>
     </div>
+    <details class="collapsible inner-collapsible">
+      <summary>Editar ficha básica</summary>
+      <form id="subjectEditForm" class="form-grid">
+        <label class="span-2">Nombre<input name="name" required value="${escapeHtml(subject.name)}"></label>
+        <label>Código<input name="code" value="${escapeHtml(subject.code)}"></label>
+        <label>Cuatrimestre
+          <select name="semester">
+            ${Object.entries(SEMESTERS).filter(([key]) => key !== 'all').map(([key, label]) => `<option value="${key}" ${normalizeSemester(subject.semester) === key ? 'selected' : ''}>${label}</option>`).join('')}
+          </select>
+        </label>
+        <label>ECTS<input name="credits" type="number" min="0" max="30" step="0.5" value="${escapeHtml(subject.credits)}"></label>
+        <label>Tipo<input name="type" value="${escapeHtml(subject.type)}"></label>
+        <label>Riesgo
+          <select name="risk"><option value="alto" ${subject.risk === 'alto' ? 'selected' : ''}>Alto</option><option value="medio" ${subject.risk === 'medio' ? 'selected' : ''}>Medio</option><option value="bajo" ${subject.risk === 'bajo' ? 'selected' : ''}>Bajo</option></select>
+        </label>
+        <label>Progreso<input name="progress" type="number" min="0" max="100" value="${escapeHtml(subject.progress)}"></label>
+        <label>Estado<input name="status" value="${escapeHtml(subject.status)}"></label>
+        <label class="span-2">Tipo de examen<input name="examType" value="${escapeHtml(subject.examType)}"></label>
+        <label class="span-2">Evaluación<textarea name="evaluation" rows="2">${escapeHtml(subject.evaluation)}</textarea></label>
+        <label class="span-2">Estrategia<textarea name="strategy" rows="2">${escapeHtml(subject.strategy)}</textarea></label>
+        <label class="span-2">Notas<textarea name="notes" rows="2">${escapeHtml(subject.notes)}</textarea></label>
+        <button class="primary-action span-2">Guardar cambios de la ficha</button>
+      </form>
+    </details>
     <div class="grid-12">
       <article class="card compact col-6">
         <h4>Evaluación</h4>
@@ -1055,11 +1202,39 @@ function openSubject(id) {
         ${renderMaterialList(subjectMaterials)}
       </article>
       <article class="card compact col-4">
-        <h4>Exámenes</h4>
+        <h4>Exámenes y preguntas</h4>
         ${subjectExams.length ? `<div class="list">${subjectExams.map(exam => `<div class="list-item"><div><strong>${escapeHtml(exam.year)} · ${escapeHtml(exam.call)}</strong><p>${escapeHtml(exam.type)}</p><p>${escapeHtml(exam.notes)}</p></div>${statusBadge(exam.status)}</div>`).join('')}</div>` : renderEmptyState()}
+        <p class="subtle-note">Preguntas históricas registradas: <strong>${subjectQuestions.length}</strong></p>
       </article>
     </div>
   `;
+  $('#subjectEditForm').addEventListener('submit', event => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    Object.assign(subject, normalizeSubject({
+      ...subject,
+      name: String(formData.get('name') || subject.name),
+      code: String(formData.get('code') || ''),
+      semester: normalizeSemester(formData.get('semester')),
+      credits: Number(formData.get('credits') || 0),
+      type: String(formData.get('type') || ''),
+      status: String(formData.get('status') || ''),
+      risk: String(formData.get('risk') || 'medio'),
+      progress: Number(formData.get('progress') || 0),
+      examType: String(formData.get('examType') || ''),
+      evaluation: String(formData.get('evaluation') || ''),
+      notes: String(formData.get('notes') || ''),
+      strategy: String(formData.get('strategy') || '')
+    }));
+    state.events = state.events.map(eventItem => eventItem.subjectId === subject.id ? { ...eventItem, semester: subject.semester } : eventItem);
+    state.materials = state.materials.map(material => material.subjectId === subject.id ? { ...material, semester: subject.semester } : material);
+    state.exams = state.exams.map(exam => exam.subjectId === subject.id ? { ...exam, semester: subject.semester } : exam);
+    state.questions = state.questions.map(question => question.subjectId === subject.id ? { ...question, semester: subject.semester } : question);
+    state.attempts = state.attempts.map(attempt => attempt.subjectId === subject.id ? { ...attempt, semester: subject.semester } : attempt);
+    saveState();
+    $('#subjectDialog').close();
+    renderView($('.active-view')?.id || 'asignaturas');
+  });
   $('#subjectDialog').showModal();
 }
 
@@ -1071,6 +1246,7 @@ function renderMaterialList(materials) {
         <strong>${escapeHtml(material.title)}</strong>
         <p>${escapeHtml(material.kind)} · ${escapeHtml(material.source || 'Sin fuente')} · ${semesterLabel(itemSemester(material))}</p>
         ${material.notes ? `<p>${escapeHtml(material.notes)}</p>` : ''}
+        <div class="inline-actions"><button class="tiny-button danger-text" data-delete-collection="materials" data-delete-id="${escapeHtml(material.id)}">Eliminar material</button></div>
       </div>
       ${statusBadge(material.status)}
     </div>
@@ -1143,6 +1319,8 @@ function renderMaterials() {
 }
 
 function renderExams() {
+  const exams = filteredExams();
+  const questions = filteredQuestions();
   $('#examenes').innerHTML = `
     <div class="grid-12">
       <article class="card col-5">
@@ -1164,12 +1342,12 @@ function renderExams() {
       </article>
       <article class="card col-7">
         <h3>Histórico de exámenes · ${semesterLabel(activeSemesterFilter())}</h3>
-        ${filteredExams().length ? `
+        ${exams.length ? `
           <table class="exam-table">
             <thead><tr><th>Asignatura</th><th>Año</th><th>Convocatoria</th><th>Tipo</th><th>Periodo</th><th>Estado</th></tr></thead>
-            <tbody>${filteredExams().map(exam => `
+            <tbody>${exams.map(exam => `
               <tr>
-                <td>${escapeHtml(subjectName(exam.subjectId))}<br><small>${escapeHtml(exam.notes || '')}</small></td>
+                <td>${escapeHtml(subjectName(exam.subjectId))}<br><small>${escapeHtml(exam.notes || '')}</small><div class="inline-actions"><button class="tiny-button danger-text" data-delete-collection="exams" data-delete-id="${escapeHtml(exam.id)}">Eliminar</button></div></td>
                 <td>${escapeHtml(exam.year)}</td>
                 <td>${escapeHtml(exam.call)}</td>
                 <td>${escapeHtml(exam.type)}</td>
@@ -1179,8 +1357,47 @@ function renderExams() {
             `).join('')}</tbody>
           </table>` : renderEmptyState()}
       </article>
+
+      <article class="card col-5">
+        <h3>Registrar pregunta histórica</h3>
+        <p class="subtle-note">Cada pregunta debe estar vinculada a un examen real, a una variante histórica o a un patrón documentado. Este será el banco de base para los simulacros rigurosos.</p>
+        <form id="questionForm" class="form-grid">
+          <label>Asignatura<select name="subjectId" required id="questionSubjectSelect">${subjectOptions()}</select></label>
+          <label>Examen de referencia<select name="examId" id="questionExamSelect"><option value="">Sin examen concreto</option>${examOptions()}</select></label>
+          <label>Tipo
+            <select name="questionType">
+              <option value="test">Test</option>
+              <option value="desarrollo">Desarrollo</option>
+              <option value="corta">Respuesta corta</option>
+              <option value="calculo">Cálculo</option>
+              <option value="caso_practico">Caso práctico</option>
+            </select>
+          </label>
+          <label>Dificultad
+            <select name="difficulty"><option value="media">Media</option><option value="baja">Baja</option><option value="alta">Alta</option></select>
+          </label>
+          <label>Tema<input name="topic" placeholder="Tema, bloque o unidad"></label>
+          <label>Frecuencia<input name="frequency" type="number" min="1" value="1"></label>
+          <label class="span-2">Enunciado<textarea name="statement" rows="4" required placeholder="Copia exacta o formulación controlada de la pregunta"></textarea></label>
+          <label class="span-2">Opciones, si es tipo test<textarea name="options" rows="3" placeholder="Una opción por línea. Marca la correcta abajo."></textarea></label>
+          <label class="span-2">Respuesta correcta<input name="correctAnswer" placeholder="Letra, texto o esquema de respuesta"></label>
+          <label class="span-2">Explicación o criterio de corrección<textarea name="explanation" rows="3"></textarea></label>
+          <label>Fuente<input name="sourceLabel" placeholder="2025 J1, 2024 SO..."></label>
+          <label>Origen
+            <select name="isExactHistorical"><option value="true">Pregunta histórica exacta</option><option value="false">Variante o patrón documentado</option></select>
+          </label>
+          <label class="span-2">Notas<textarea name="notes" rows="2"></textarea></label>
+          <button class="primary-action span-2">Guardar pregunta</button>
+        </form>
+      </article>
+      <article class="card col-7">
+        <h3>Banco de preguntas · ${semesterLabel(activeSemesterFilter())}</h3>
+        <div class="toolbar"><input id="questionSearch" type="search" placeholder="Buscar por asignatura, tema, fuente o enunciado..."></div>
+        <div id="questionList"></div>
+      </article>
     </div>
   `;
+
   $('#examForm').addEventListener('submit', event => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -1198,6 +1415,65 @@ function renderExams() {
     saveState();
     renderExams();
   });
+
+  $('#questionForm').addEventListener('submit', event => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const subjectId = String(formData.get('subjectId'));
+    const optionsText = String(formData.get('options') || '').trim();
+    state.questions.push({
+      id: cryptoRandomId(),
+      subjectId,
+      examId: String(formData.get('examId') || '') || null,
+      semester: normalizeSemester(subjectById(subjectId)?.semester),
+      questionType: String(formData.get('questionType') || 'pendiente'),
+      topic: String(formData.get('topic') || ''),
+      statement: String(formData.get('statement') || ''),
+      options: optionsText ? optionsText.split('\n').map(option => option.trim()).filter(Boolean) : null,
+      correctAnswer: String(formData.get('correctAnswer') || ''),
+      explanation: String(formData.get('explanation') || ''),
+      sourceLabel: String(formData.get('sourceLabel') || ''),
+      isExactHistorical: String(formData.get('isExactHistorical')) === 'true',
+      frequency: Number(formData.get('frequency') || 1),
+      difficulty: String(formData.get('difficulty') || 'media'),
+      notes: String(formData.get('notes') || '')
+    });
+    saveState();
+    renderExams();
+  });
+
+  const renderFilteredQuestions = () => {
+    const query = ($('#questionSearch')?.value || '').toLowerCase().trim();
+    const filtered = questions.filter(question => {
+      const content = `${subjectName(question.subjectId)} ${question.topic} ${question.statement} ${question.correctAnswer} ${question.sourceLabel} ${question.notes}`.toLowerCase();
+      return content.includes(query);
+    });
+    $('#questionList').innerHTML = renderQuestionList(filtered);
+  };
+  $('#questionSearch').addEventListener('input', renderFilteredQuestions);
+  renderFilteredQuestions();
+}
+
+function renderQuestionList(questions) {
+  if (!questions.length) return renderEmptyState();
+  return `<div class="list question-list">${questions.map(question => `
+    <div class="list-item question-item">
+      <div>
+        <strong>${escapeHtml(subjectName(question.subjectId))} · ${escapeHtml(question.topic || 'Sin tema')}</strong>
+        <p>${escapeHtml(question.statement)}</p>
+        ${question.options?.length ? `<ol class="options-list">${question.options.map(option => `<li>${escapeHtml(option)}</li>`).join('')}</ol>` : ''}
+        ${question.correctAnswer ? `<p><strong>Respuesta:</strong> ${escapeHtml(question.correctAnswer)}</p>` : ''}
+        ${question.explanation ? `<p>${escapeHtml(question.explanation)}</p>` : ''}
+        <div class="inline-actions"><button class="tiny-button danger-text" data-delete-collection="questions" data-delete-id="${escapeHtml(question.id)}">Eliminar pregunta</button></div>
+      </div>
+      <div class="badge-stack">
+        <span class="badge primary">${escapeHtml(question.questionType || 'Tipo pendiente')}</span>
+        <span class="badge neutral">${escapeHtml(question.sourceLabel || 'Sin fuente')}</span>
+        <span class="badge warning">Frecuencia ${escapeHtml(question.frequency || 1)}</span>
+        ${semesterBadge(itemSemester(question))}
+      </div>
+    </div>
+  `).join('')}</div>`;
 }
 
 function renderSimulations() {
@@ -1207,21 +1483,28 @@ function renderSimulations() {
     <div class="grid-12">
       <article class="card col-8">
         <h3>Simulador inicial · ${semesterLabel(activeSemesterFilter())}</h3>
-        <p style="color:var(--muted);margin-top:0">Los simulacros rigurosos se activarán cuando hayamos cargado y clasificado preguntas reales de exámenes anteriores.</p>
+        <p style="color:var(--muted);margin-top:0">Los simulacros automáticos se activarán cuando cada asignatura tenga preguntas históricas suficientes. De momento, GRADUS ya calcula si el banco permite preparar un simulacro fiable.</p>
         <div class="notice">
           <strong>Regla de rigor</strong>
           GRADUS no inventará preguntas oficiales. Cada simulacro deberá indicar si procede de pregunta histórica exacta, variante histórica o patrón documentado.
         </div>
         <div class="subject-grid" style="margin-top:16px">
-          ${subjects.length ? subjects.map(subject => `
+          ${subjects.length ? subjects.map(subject => {
+            const questionCount = state.questions.filter(question => question.subjectId === subject.id).length;
+            const ready = questionCount >= 10;
+            return `
             <article class="card compact">
               <h4>${escapeHtml(subject.name)}</h4>
               <p>${escapeHtml(subject.examType || 'Pendiente de configurar')}</p>
               <p>${escapeHtml(subject.evaluation || '')}</p>
-              ${semesterBadge(subject.semester)}
-              <button class="primary-action mock-attempt-btn" data-subject-id="${escapeHtml(subject.id)}" style="margin-top:12px">Registrar simulacro de prueba</button>
-            </article>
-          `).join('') : renderEmptyState()}
+              <div class="subject-meta">
+                ${semesterBadge(subject.semester)}
+                <span class="badge ${ready ? 'success' : 'warning'}">${questionCount} preguntas</span>
+              </div>
+              <p class="subtle-note">${ready ? 'Banco suficiente para empezar a construir simulacros guiados.' : 'Conviene cargar más preguntas históricas antes de generar simulacros.'}</p>
+              <button class="primary-action mock-attempt-btn" data-subject-id="${escapeHtml(subject.id)}" style="margin-top:12px">Registrar simulacro manual</button>
+            </article>`;
+          }).join('') : renderEmptyState()}
         </div>
       </article>
       <article class="card col-4">
@@ -1238,9 +1521,9 @@ function renderSimulations() {
         subjectId,
         semester: normalizeSemester(subjectById(subjectId)?.semester),
         date: new Date().toISOString().slice(0, 10),
-        title: 'Simulacro de prueba de estructura',
+        title: 'Simulacro manual registrado',
         score: null,
-        notes: 'Intento de prueba registrado para comprobar historial.'
+        notes: 'Intento manual. En próximas versiones se recogerá estructura, respuestas y nota calculada.'
       });
       saveState();
       renderSimulations();
@@ -1256,6 +1539,7 @@ function renderAttempts(attempts = state.attempts) {
         <strong>${escapeHtml(attempt.title)}</strong>
         <p>${escapeHtml(subjectName(attempt.subjectId))} · ${formatDate(attempt.date)}</p>
         <p>${escapeHtml(attempt.notes)}</p>
+        <div class="inline-actions"><button class="tiny-button danger-text" data-delete-collection="attempts" data-delete-id="${escapeHtml(attempt.id)}">Eliminar intento</button></div>
       </div>
       <div class="badge-stack">
         ${semesterBadge(itemSemester(attempt))}
@@ -1269,7 +1553,22 @@ function renderProgress() {
   const subjects = filteredSubjects();
   $('#progreso').innerHTML = `
     <div class="grid-12">
-      <article class="card col-12">
+      <article class="card col-4">
+        <h3>Actualizar progreso</h3>
+        <form id="progressForm" class="form-grid">
+          <label class="span-2">Asignatura<select name="subjectId" required>${subjectOptions()}</select></label>
+          <label>Progreso %<input name="progress" type="number" min="0" max="100" required placeholder="0-100"></label>
+          <label>Riesgo
+            <select name="risk"><option value="alto">Alto</option><option value="medio" selected>Medio</option><option value="bajo">Bajo</option></select>
+          </label>
+          <label class="span-2">Estado
+            <select name="status"><option value="por_configurar">Por configurar</option><option value="pendiente">Pendiente</option><option value="revisado">Revisado</option><option value="por_decidir">Por decidir</option></select>
+          </label>
+          <label class="span-2">Estrategia u observación<textarea name="strategy" rows="3" placeholder="Actualizar estrategia si procede"></textarea></label>
+          <button class="primary-action span-2">Guardar progreso</button>
+        </form>
+      </article>
+      <article class="card col-8">
         <h3>Progreso por asignatura · ${semesterLabel(activeSemesterFilter())}</h3>
         ${subjects.length ? `
         <table class="data-table">
@@ -1288,6 +1587,19 @@ function renderProgress() {
       </article>
     </div>
   `;
+  $('#progressForm').addEventListener('submit', event => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const subject = subjectById(String(formData.get('subjectId')));
+    if (!subject) return;
+    subject.progress = Math.max(0, Math.min(100, Number(formData.get('progress') || 0)));
+    subject.risk = String(formData.get('risk') || subject.risk || 'medio');
+    subject.status = String(formData.get('status') || subject.status || 'pendiente');
+    const strategy = String(formData.get('strategy') || '').trim();
+    if (strategy) subject.strategy = strategy;
+    saveState();
+    renderProgress();
+  });
 }
 
 function renderSettings() {
@@ -1299,6 +1611,7 @@ function renderSettings() {
         <p style="color:var(--muted)">GRADUS conserva copia local en el navegador. Si Supabase está configurado y has iniciado sesión, también sincroniza tus datos privados con Row Level Security.</p>
         <div class="list">
           <div class="list-item"><strong>Aplicación</strong><p>${escapeHtml(state.meta.appName)} v${APP_VERSION}</p></div>
+          <div class="list-item"><strong>Banco de preguntas</strong><p>${escapeHtml(state.questions.length)} preguntas históricas o patrones documentados</p></div>
           <div class="list-item"><strong>Curso</strong><p>${escapeHtml(state.meta.course)}</p></div>
           <div class="list-item"><strong>Filtro activo</strong><p>${semesterLabel(activeSemesterFilter())}</p></div>
           <div class="list-item"><strong>Supabase</strong><p>${configured ? 'Configurado' : 'Pendiente de configurar en supabase-config.js'}</p></div>
@@ -1324,7 +1637,7 @@ function renderSettings() {
   $('#exportDataBtn').addEventListener('click', exportData);
   $('#syncNowBtn').addEventListener('click', () => persistStateToSupabase({ immediate: true }));
   $('#resetDataBtn').addEventListener('click', () => {
-    if (!confirm('¿Seguro que quieres restaurar los datos iniciales de GRADUS v0.2?')) return;
+    if (!confirm('¿Seguro que quieres restaurar los datos iniciales de GRADUS v0.3?')) return;
     state = normalizeState(DEFAULT_STATE);
     saveState();
     renderSettings();
@@ -1353,8 +1666,55 @@ function subjectOptions() {
     .join('');
 }
 
+function examOptions() {
+  return state.exams
+    .map(exam => `<option value="${escapeHtml(exam.id)}">${escapeHtml(subjectName(exam.subjectId))} · ${escapeHtml(exam.year)} · ${escapeHtml(exam.call)}</option>`)
+    .join('');
+}
+
 function populateEventSubjectSelect() {
   $('#eventSubjectSelect').innerHTML = subjectOptions();
+}
+
+async function deleteFromSupabase(collection, id) {
+  if (!supabaseClient || !authSession) return;
+  const tableMap = {
+    events: 'academic_events',
+    materials: 'materials',
+    exams: 'exams',
+    attempts: 'simulation_attempts',
+    questions: 'exam_questions'
+  };
+  const table = tableMap[collection];
+  if (!table) return;
+  const { error } = await supabaseClient.from(table).delete().eq('user_id', authSession.user.id).eq('id', id);
+  if (error) {
+    console.error('Error al eliminar en Supabase:', error);
+    setSyncStatus('Error al eliminar', 'danger');
+  } else {
+    setSyncStatus('Sincronizado con Supabase', 'online');
+  }
+}
+
+function setupGlobalActions() {
+  document.addEventListener('click', async event => {
+    const deleteButton = event.target.closest('[data-delete-collection]');
+    if (!deleteButton) return;
+    const collection = deleteButton.dataset.deleteCollection;
+    const id = deleteButton.dataset.deleteId;
+    const labels = { events: 'fecha', materials: 'material', exams: 'examen', attempts: 'intento', questions: 'pregunta' };
+    if (!state[collection] || !id) return;
+    if (!confirm(`¿Eliminar esta ${labels[collection] || 'entrada'}?`)) return;
+    state[collection] = state[collection].filter(item => String(item.id) !== String(id));
+    if (collection === 'exams') {
+      state.questions = state.questions.filter(question => String(question.examId || '') !== String(id));
+    }
+    saveLocalState();
+    await deleteFromSupabase(collection, id);
+    const dialog = $('#subjectDialog');
+    if (dialog?.open) dialog.close();
+    renderView($('.active-view')?.id || 'inicio');
+  });
 }
 
 function setupEventDialog() {
@@ -1418,6 +1778,7 @@ async function init() {
   setupEventDialog();
   setupSubjectDialog();
   setupAuthDialog();
+  setupGlobalActions();
   setupPWA();
   setupSupabaseClient();
   await setupAuth();

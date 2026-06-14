@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gradus-v0-2';
+const CACHE_NAME = 'gradus-v0-3';
 const STATIC_ASSETS = [
   './',
   './index.html',
