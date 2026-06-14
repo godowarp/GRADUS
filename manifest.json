@@ -1,0 +1,25 @@
+{
+  "name": "GRADUS · Pedagogía UNED",
+  "short_name": "GRADUS",
+  "description": "Web-app personal para gestionar asignaturas, fechas, materiales, exámenes y simulacros del Grado en Pedagogía UNED.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f2ea",
+  "theme_color": "#0f3d35",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
