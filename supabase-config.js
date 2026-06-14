@@ -1,7 +1,7 @@
 // GRADUS v0.2
-// Pega aquí SOLO la Project URL y la anon/public key de Supabase.
-// No pegues nunca la service_role key ni la contraseña de la base de datos.
+// Configuración pública de Supabase para el cliente web.
+// No incluir aquí nunca service_role key, secret key ni contraseña de base de datos.
 window.GRADUS_SUPABASE = {
-  url: 'PEGA_AQUI_TU_PROJECT_URL',
-  anonKey: 'PEGA_AQUI_TU_ANON_PUBLIC_KEY'
+  url: 'https://shwnorpywkexcondfwpr.supabase.co',
+  anonKey: 'sb_publishable_LoRCx8f2U0FSMfzWmMr5gg_6G4w_TGw'
 };
