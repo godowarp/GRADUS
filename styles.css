@@ -548,3 +548,122 @@ input:focus, select:focus, textarea:focus {
   .toolbar input, .toolbar select { max-width: 100%; }
   .calendar-label { font-size: .66rem; }
 }
+
+/* GRADUS v0.2: Supabase, cuatrimestres y estado de sesión */
+.topbar-controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.global-filter {
+  min-width: 210px;
+  text-align: left;
+}
+
+.global-filter select {
+  min-width: 210px;
+  margin-top: 6px;
+}
+
+.sync-indicator,
+.session-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: .78rem;
+  font-weight: 780;
+}
+
+.sync-indicator.local { background: #ece6da; color: #665b4a; }
+.sync-indicator.warning { background: var(--warning-soft); color: var(--warning); }
+.sync-indicator.online { background: var(--success-soft); color: var(--success); }
+.sync-indicator.danger { background: var(--danger-soft); color: var(--danger); }
+.session-label { background: rgba(15,61,53,.08); color: var(--primary); }
+
+.semester-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.semester-card {
+  border: 1px solid rgba(15,61,53,.09);
+  border-radius: var(--radius-lg);
+  background: rgba(255,253,248,.82);
+  color: var(--text);
+  padding: 16px;
+  text-align: left;
+  box-shadow: 0 10px 22px rgba(29, 44, 39, .07);
+  transition: .18s ease;
+}
+
+.semester-card:hover,
+.semester-card.active {
+  background: var(--primary);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.semester-card strong,
+.semester-card span {
+  display: block;
+}
+
+.semester-card span {
+  margin-top: 6px;
+  color: currentColor;
+  opacity: .78;
+  font-size: .88rem;
+}
+
+.badge-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.form-message {
+  min-height: 24px;
+  margin: 0;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.auth-actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1040px) {
+  .topbar-controls {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 820px) {
+  .topbar-controls,
+  .global-filter,
+  .global-filter select,
+  #authBtn,
+  #quickAddBtn {
+    width: 100%;
+  }
+
+  .badge-stack {
+    align-items: flex-start;
+  }
+}

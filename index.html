@@ -31,7 +31,7 @@
         <button class="nav-item" data-view="progreso"><span>◉</span>Progreso</button>
         <button class="nav-item" data-view="ajustes"><span>⚙</span>Ajustes</button>
       </nav>
-      <div class="version-pill">Versión 0.1</div>
+      <div class="version-pill">Versión 0.2</div>
     </aside>
 
     <main class="content-area">
@@ -39,8 +39,24 @@
         <div>
           <p class="eyebrow">Panel de dirección académica</p>
           <h2 id="viewTitle">Inicio</h2>
+          <div class="topbar-meta">
+            <span id="syncStatus" class="sync-indicator local">Modo local</span>
+            <span id="sessionLabel" class="session-label">Sin sesión</span>
+          </div>
         </div>
-        <button id="quickAddBtn" class="primary-action">+ Añadir fecha</button>
+        <div class="topbar-controls">
+          <label class="global-filter">Cuatrimestre
+            <select id="globalSemesterFilter">
+              <option value="all">Todo el curso</option>
+              <option value="primer_cuatrimestre">Primer cuatrimestre</option>
+              <option value="segundo_cuatrimestre">Segundo cuatrimestre</option>
+              <option value="anual">Anuales / TFG</option>
+              <option value="pendiente">Pendiente de clasificar</option>
+            </select>
+          </label>
+          <button id="authBtn" class="ghost-button">Conectar Supabase</button>
+          <button id="quickAddBtn" class="primary-action">+ Añadir fecha</button>
+        </div>
       </header>
 
       <section id="inicio" class="view active-view" aria-labelledby="viewTitle"></section>
@@ -90,6 +106,34 @@
     </form>
   </dialog>
 
+  <dialog id="authDialog" class="modal-card">
+    <form method="dialog" id="authForm">
+      <div class="modal-header">
+        <h3>Conexión privada con Supabase</h3>
+        <button class="icon-button" value="cancel" aria-label="Cerrar">×</button>
+      </div>
+      <div class="form-grid">
+        <div class="notice span-2">
+          <strong>Regla de seguridad</strong>
+          Usa contraseña propia de GRADUS. No introduzcas aquí la contraseña real de la UNED.
+        </div>
+        <label class="span-2">Correo
+          <input name="email" type="email" autocomplete="email" placeholder="tu correo UNED o personal">
+        </label>
+        <label class="span-2">Contraseña de GRADUS
+          <input name="password" type="password" autocomplete="current-password" minlength="6" placeholder="mínimo 6 caracteres">
+        </label>
+        <p id="authMessage" class="form-message span-2"></p>
+      </div>
+      <div class="modal-actions auth-actions">
+        <button value="cancel" class="secondary-button">Cerrar</button>
+        <button type="button" id="logoutBtn" class="danger-button">Cerrar sesión</button>
+        <button type="submit" name="authAction" value="signup" class="ghost-button">Crear cuenta</button>
+        <button type="submit" name="authAction" value="login" class="primary-action">Entrar</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="subjectDialog" class="modal-card large-modal">
     <div class="modal-header">
       <h3 id="subjectDialogTitle">Asignatura</h3>
@@ -106,6 +150,8 @@
     </div>
   </template>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="supabase-config.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>

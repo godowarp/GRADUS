@@ -1,7 +1,7 @@
 {
   "name": "GRADUS · Pedagogía UNED",
   "short_name": "GRADUS",
-  "description": "Web-app personal para gestionar asignaturas, fechas, materiales, exámenes y simulacros del Grado en Pedagogía UNED.",
+  "description": "GRADUS, web-app personal para la gestión del Grado en Pedagogía UNED.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
