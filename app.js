@@ -1,6 +1,6 @@
-const APP_VERSION = '0.6';
-const STORAGE_KEY = 'gradus.v0.6.state';
-const LEGACY_STORAGE_KEYS = ['gradus.v0.5.state', 'gradus.v0.4.state', 'gradus.v0.3.state', 'gradus.v0.2.state', 'gradus.v0.1.state'];
+const APP_VERSION = '0.7';
+const STORAGE_KEY = 'gradus.v0.7.state';
+const LEGACY_STORAGE_KEYS = ['gradus.v0.6.state', 'gradus.v0.5.state', 'gradus.v0.4.state', 'gradus.v0.3.state', 'gradus.v0.2.state', 'gradus.v0.1.state'];
 const MATERIAL_BUCKET = 'gradus-materials';
 
 const SEMESTERS = {
@@ -11,6 +11,191 @@ const SEMESTERS = {
   pendiente: 'Pendiente de clasificar'
 };
 
+
+const COURSE_SUBJECT_TEMPLATES = [
+  {
+    id: 'diseno-curriculo',
+    name: 'Diseño, Desarrollo e Innovación del Currículum',
+    code: '63022037',
+    semester: 'primer_cuatrimestre',
+    credits: 6,
+    type: 'Obligatoria 4.º',
+    status: 'por_configurar',
+    risk: 'medio',
+    progress: 0,
+    examType: 'Pendiente de analizar con guía y exámenes históricos',
+    evaluation: 'Pendiente de completar con la guía 2026-2027',
+    notes: 'Guía pública disponible en el paquete documental. Manual aportado: Ensayos sobre el currículum. Pendiente de registrar temas, criterios y exámenes tipo.',
+    strategy: 'Primer cuatrimestre. Prioridad temprana: revisar guía, extraer sistema de evaluación y construir temas madre o banco de preguntas según el modelo de examen.'
+  },
+  {
+    id: 'evaluacion-centros',
+    name: 'Evaluación de Centros y Profesores',
+    code: '63024036',
+    semester: 'primer_cuatrimestre',
+    credits: 6,
+    type: 'Obligatoria 4.º',
+    status: 'por_configurar',
+    risk: 'medio',
+    progress: 0,
+    examType: 'Pendiente de analizar con guía y exámenes históricos',
+    evaluation: 'Pendiente de completar con la guía 2026-2027',
+    notes: 'Guía pública disponible. La usuaria indica que cuenta con manual/material de la asignatura o lo incorporará como fuente de estudio.',
+    strategy: 'Primer cuatrimestre. Abrir pronto ficha de evaluación, criterios, instrumentos y patrones de examen.'
+  },
+  {
+    id: 'practicas-v',
+    name: 'Prácticas Profesionales V',
+    code: '63024065',
+    semester: 'primer_cuatrimestre',
+    credits: 6,
+    type: 'Obligatoria 4.º',
+    status: 'por_configurar',
+    risk: 'alto',
+    progress: 0,
+    examType: 'Sin examen ordinario si la guía confirma evaluación por actividades/prácticas',
+    evaluation: 'Pendiente de completar con instrucciones oficiales y cronograma del centro/tutorial',
+    notes: 'Debe tener módulo propio de tareas, evidencias, entregas, anexos y control formal.',
+    strategy: 'Prioridad alta por dependencia de plazos y documentación. Preparar checklist de evidencias y entregas desde el inicio.'
+  },
+  {
+    id: 'evaluacion-politicas',
+    name: 'Evaluación de Políticas y Sistemas Educativos',
+    code: '63024088',
+    semester: 'primer_cuatrimestre',
+    credits: 6,
+    type: 'Optativa escogida',
+    status: 'por_configurar',
+    risk: 'medio',
+    progress: 0,
+    examType: 'Pendiente de analizar con guía y exámenes históricos',
+    evaluation: 'Pendiente de completar con la guía 2026-2027',
+    notes: 'Optativa elegida para 4.º. Guía y exámenes históricos disponibles en el paquete documental.',
+    strategy: 'Primer cuatrimestre. Conviene detectar cuanto antes si el examen repite patrones y si admite preparación por temas madre.'
+  },
+  {
+    id: 'educacion-economia-desarrollo',
+    name: 'Educación, Economía y Desarrollo',
+    code: '63014167',
+    semester: 'primer_cuatrimestre',
+    credits: 6,
+    type: 'Optativa escogida',
+    status: 'por_configurar',
+    risk: 'medio',
+    progress: 0,
+    examType: 'Pendiente de analizar con guía y exámenes históricos',
+    evaluation: 'Pendiente de completar con la guía 2026-2027',
+    notes: 'Optativa elegida. Guía pública y exámenes históricos disponibles en el paquete documental.',
+    strategy: 'Primer cuatrimestre. Crear mapa de conceptos económicos básicos, desarrollo y educación antes de entrar en simulacros.'
+  },
+  {
+    id: 'evaluacion-programas',
+    name: 'Evaluación de Programas',
+    code: '63024059',
+    semester: 'segundo_cuatrimestre',
+    credits: 6,
+    type: 'Obligatoria 4.º',
+    status: 'por_configurar',
+    risk: 'medio',
+    progress: 0,
+    examType: 'Pendiente de analizar con guía y exámenes históricos',
+    evaluation: 'Pendiente de completar con la guía 2026-2027',
+    notes: 'Segundo cuatrimestre. Guía pública y exámenes históricos disponibles en el paquete documental.',
+    strategy: 'Segundo cuatrimestre. Trabajar con lógica de programas, criterios, evaluación y casos prácticos si aparecen en exámenes.'
+  },
+  {
+    id: 'funcion-pedagogica',
+    name: 'Formación y Actualización en la Función Pedagógica',
+    code: '6302402-',
+    semester: 'segundo_cuatrimestre',
+    credits: 6,
+    type: 'Obligatoria 4.º',
+    status: 'por_configurar',
+    risk: 'medio',
+    progress: 0,
+    examType: 'Pendiente de analizar con guía y exámenes históricos',
+    evaluation: 'Pendiente de completar con la guía 2026-2027',
+    notes: 'El código aparece así en la guía extraída. Conviene verificarlo visualmente en el documento oficial antes de cerrar la ficha.',
+    strategy: 'Segundo cuatrimestre. Identificar temas recurrentes y posibles preguntas de desarrollo o test antes de mayo.'
+  },
+  {
+    id: 'tfg',
+    name: 'Trabajo Fin de Grado',
+    code: '63024013',
+    semester: 'segundo_cuatrimestre',
+    credits: 6,
+    type: 'TFG',
+    status: 'por_configurar',
+    risk: 'alto',
+    progress: 0,
+    examType: 'Trabajo escrito y defensa, según normativa y cronograma vigente',
+    evaluation: 'Pendiente de completar con línea, tutoría, cronograma, rúbrica y normativa 2026-2027',
+    notes: 'Incluye cronograma, líneas, normativa, proceso de valoración, declaración de autoría e integridad académica con IA en el paquete documental.',
+    strategy: 'Segundo cuatrimestre con seguimiento especial. Abrir módulo propio de tema, tutoría, borradores, bibliografía, revisión formal y defensa.'
+  },
+  {
+    id: 'bases',
+    name: 'Bases del Aprendizaje y Educación',
+    code: '63901098',
+    semester: 'segundo_cuatrimestre',
+    credits: 6,
+    type: 'Formación básica pendiente',
+    status: 'pendiente',
+    risk: 'alto',
+    progress: 5,
+    examType: 'Pendiente de confirmar con guía 2026-2027 y exámenes históricos',
+    evaluation: 'Pendiente de completar con guía, PEC si procede y sistema de examen',
+    notes: 'Asignatura pendiente de 1.º. Guía y manual de Bases disponibles en el paquete documental.',
+    strategy: 'Prioridad alta por antecedente de suspensión. Programar desde el principio estudio espaciado, recuperación activa y simulacros.'
+  },
+  {
+    id: 'metodos',
+    name: 'Métodos y Diseños de Investigación en Educación',
+    code: '63022095',
+    semester: 'segundo_cuatrimestre',
+    credits: 6,
+    type: 'Obligatoria pendiente',
+    status: 'pendiente',
+    risk: 'alto',
+    progress: 8,
+    examType: 'Mixto: 20 preguntas tipo test + 1 pregunta de desarrollo',
+    evaluation: 'Examen 80% · PEC-2 20% · PEC-1 autoevaluable sin peso',
+    notes: 'Datos iniciales tomados de la guía pública 2026-2027. Exámenes históricos disponibles en el paquete documental.',
+    strategy: 'Prioridad alta por antecedente de suspensión. Trabajar con test, cálculos, errores frecuentes y desarrollo de una página.'
+  }
+];
+
+const COURSE_MATERIAL_TEMPLATES = [
+  { id: 'mat-guia-diseno-curriculo', subjectId: 'diseno-curriculo', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Diseño, Desarrollo e Innovación del Currículum', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de subir como archivo privado o vincular a ficha.' },
+  { id: 'mat-manual-curriculum', subjectId: 'diseno-curriculo', semester: 'primer_cuatrimestre', title: 'Ensayos sobre el currículum', kind: 'Manual', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Material disponible en el ZIP aportado. Pendiente de revisión académica.' },
+  { id: 'mat-guia-evaluacion-centros', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Evaluación de Centros y Profesores', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de analizar sistema de evaluación y tipo de examen.' },
+  { id: 'mat-guia-practicas-v', subjectId: 'practicas-v', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Prácticas Profesionales V', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de extraer entregas, evidencias y cronograma.' },
+  { id: 'mat-guia-politicas', subjectId: 'evaluacion-politicas', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Evaluación de Políticas y Sistemas Educativos', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de análisis de examen y evaluación.' },
+  { id: 'mat-guia-economia', subjectId: 'educacion-economia-desarrollo', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Educación, Economía y Desarrollo', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de análisis de examen y evaluación.' },
+  { id: 'mat-guia-programas', subjectId: 'evaluacion-programas', semester: 'segundo_cuatrimestre', title: 'Guía pública 2026-2027 · Evaluación de Programas', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de análisis de examen y evaluación.' },
+  { id: 'mat-guia-funcion', subjectId: 'funcion-pedagogica', semester: 'segundo_cuatrimestre', title: 'Guía pública 2026-2027 · Formación y Actualización en la Función Pedagógica', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de revisar código, evaluación y exámenes.' },
+  { id: 'mat-guia-tfg', subjectId: 'tfg', semester: 'segundo_cuatrimestre', title: 'Guía pública 2026-2027 · Trabajo Fin de Grado', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Complementar con normativa, cronograma y líneas.' },
+  { id: 'mat-tfg-cronograma', subjectId: 'tfg', semester: 'segundo_cuatrimestre', title: 'Cronograma TFG 2025-2026', kind: 'TFG', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Útil como referencia provisional hasta cronograma 2026-2027.' },
+  { id: 'mat-tfg-integridad-ia', subjectId: 'tfg', semester: 'segundo_cuatrimestre', title: 'Guía para asegurar la integridad académica con IA', kind: 'Normativa', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Relevante para declaración de autoría, uso de IA y revisión ética.' },
+  { id: 'mat-guia-bases', subjectId: 'bases', semester: 'segundo_cuatrimestre', title: 'Guía pública 2026-2027 · Bases del Aprendizaje y Educación', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de extraer sistema de evaluación y contenidos.' },
+  { id: 'mat-manual-bases', subjectId: 'bases', semester: 'segundo_cuatrimestre', title: 'Manual · Bases del Aprendizaje', kind: 'Manual', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Manual disponible. Pendiente de índice, bloques y planificación de estudio.' },
+  { id: 'mat-guia-metodos', subjectId: 'metodos', semester: 'segundo_cuatrimestre', title: 'Guía pública 2026-2027 · Métodos y Diseños de Investigación en Educación', kind: 'Guía', source: 'Paquete documental aportado', status: 'revisado', notes: 'Ficha inicial ya creada con la estructura examen 80% + PEC 20%.' }
+];
+
+const COURSE_EXAM_SUMMARIES = [
+  { id: 'hist-diseno-curriculo', subjectId: 'diseno-curriculo', semester: 'primer_cuatrimestre', year: '2012-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '48 exámenes detectados para el código 63022037. Pendiente de registrar preguntas, temas y patrones.' },
+  { id: 'hist-evaluacion-centros', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', year: '2012-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '40 exámenes detectados para el código 63024036. Pendiente de análisis.' },
+  { id: 'hist-politicas', subjectId: 'evaluacion-politicas', semester: 'primer_cuatrimestre', year: '2014-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '40 exámenes detectados para el código 63024088. Pendiente de análisis.' },
+  { id: 'hist-economia', subjectId: 'educacion-economia-desarrollo', semester: 'primer_cuatrimestre', year: '2013-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '44 exámenes detectados para el código 63014167. Pendiente de análisis.' },
+  { id: 'hist-programas', subjectId: 'evaluacion-programas', semester: 'segundo_cuatrimestre', year: '2014-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '38 exámenes detectados para el código 63024059. Pendiente de análisis.' },
+  { id: 'hist-funcion', subjectId: 'funcion-pedagogica', semester: 'segundo_cuatrimestre', year: '2014-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '38 exámenes detectados para el código 6302402. Pendiente de confirmar código y analizar.' },
+  { id: 'hist-tfg', subjectId: 'tfg', semester: 'segundo_cuatrimestre', year: '2025-2026', call: 'Normativa y proceso', type: 'TFG', status: 'pendiente_analisis', notes: 'No es banco de examen: agrupa cronograma, líneas, normativa, declaración de autoría y proceso de valoración.' },
+  { id: 'hist-bases', subjectId: 'bases', semester: 'segundo_cuatrimestre', year: '2012-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '57 exámenes detectados para el código 63901098. Prioridad alta para crear simulacros.' },
+  { id: 'hist-metodos', subjectId: 'metodos', semester: 'segundo_cuatrimestre', year: '2012-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '46 exámenes detectados para el código 63022095. Prioridad alta para test, cálculos y desarrollo.' }
+];
+
+const OBSOLETE_INITIAL_SUBJECT_IDS = new Set(['direccion', 'orientacion-profesional', 'optativa-1', 'optativa-2']);
+
 const DEFAULT_STATE = {
   meta: {
     appName: 'GRADUS',
@@ -20,146 +205,38 @@ const DEFAULT_STATE = {
     version: APP_VERSION
   },
   ui: {
-    semesterFilter: 'all'
+    semesterFilter: 'all',
+    focusMode: false
   },
-  subjects: [
-    {
-      id: 'metodos',
-      name: 'Métodos y Diseños de Investigación en Educación',
-      code: '63022095',
-      semester: 'segundo_cuatrimestre',
-      credits: 6,
-      type: 'Obligatoria pendiente',
-      status: 'pendiente',
-      risk: 'alto',
-      progress: 8,
-      examType: 'Mixto: 20 test + 1 desarrollo',
-      evaluation: 'Examen 80% · PEC-2 20% · PEC-1 autoevaluable sin peso',
-      notes: 'Datos iniciales tomados de la guía pública 2026-2027. Pendiente completar con manual y orientaciones del curso virtual cuando estén disponibles.',
-      strategy: 'Prioridad alta por ser asignatura suspendida previamente. Conviene trabajar con simulacros de test, cálculos y desarrollo de una página.'
-    },
-    {
-      id: 'bases',
-      name: 'Bases del Aprendizaje y Educación',
-      code: 'Pendiente de revisar',
-      semester: 'segundo_cuatrimestre',
-      credits: 6,
-      type: 'Formación básica pendiente',
-      status: 'pendiente',
-      risk: 'alto',
-      progress: 5,
-      examType: 'Pendiente de confirmar con guía 2026-2027',
-      evaluation: 'Pendiente de completar',
-      notes: 'Asignatura pendiente de 1.º. Se completará cuando se revise la guía actualizada.',
-      strategy: 'Prioridad alta por antecedente de suspensión. Necesitará calendario de repasos desde el inicio.'
-    },
-    {
-      id: 'direccion',
-      name: 'Dirección y Supervisión de Centros',
-      code: 'Pendiente',
-      semester: 'primer_cuatrimestre',
-      credits: 6,
-      type: '4.º curso',
-      status: 'por_configurar',
-      risk: 'medio',
-      progress: 0,
-      examType: 'Pendiente de analizar',
-      evaluation: 'Pendiente de completar',
-      notes: 'Ficha creada como estructura inicial. Falta análisis de guía y exámenes.',
-      strategy: 'Pendiente de decidir carga y estrategia.'
-    },
-    {
-      id: 'evaluacion-programas',
-      name: 'Evaluación de Programas',
-      code: 'Pendiente',
-      semester: 'segundo_cuatrimestre',
-      credits: 6,
-      type: '4.º curso',
-      status: 'por_configurar',
-      risk: 'medio',
-      progress: 0,
-      examType: 'Pendiente de analizar',
-      evaluation: 'Pendiente de completar',
-      notes: 'Ficha creada como estructura inicial. Falta análisis de guía y exámenes.',
-      strategy: 'Pendiente de decidir carga y estrategia.'
-    },
-    {
-      id: 'evaluacion-centros',
-      name: 'Evaluación de Centros y Profesores',
-      code: 'Pendiente',
-      semester: 'primer_cuatrimestre',
-      credits: 6,
-      type: '4.º curso',
-      status: 'por_configurar',
-      risk: 'medio',
-      progress: 0,
-      examType: 'Pendiente de analizar',
-      evaluation: 'Pendiente de completar',
-      notes: 'Ficha creada como estructura inicial. Falta análisis de guía y exámenes.',
-      strategy: 'Pendiente de decidir carga y estrategia.'
-    },
-    {
-      id: 'orientacion-profesional',
-      name: 'Orientación Profesional y Personal',
-      code: 'Pendiente',
-      semester: 'primer_cuatrimestre',
-      credits: 6,
-      type: '4.º curso',
-      status: 'por_configurar',
-      risk: 'medio',
-      progress: 0,
-      examType: 'Pendiente de analizar',
-      evaluation: 'Pendiente de completar',
-      notes: 'Ficha creada como estructura inicial. Falta análisis de guía y exámenes.',
-      strategy: 'Pendiente de decidir carga y estrategia.'
-    },
-    {
-      id: 'tfg',
-      name: 'Trabajo Fin de Grado',
-      code: 'TFG',
-      semester: 'anual',
-      credits: 6,
-      type: 'TFG',
-      status: 'por_configurar',
-      risk: 'alto',
-      progress: 0,
-      examType: 'Defensa y trabajo escrito',
-      evaluation: 'Pendiente de completar con normativa y cronograma vigente',
-      notes: 'Módulo específico pendiente para tema, tutoría, borradores, bibliografía y defensa.',
-      strategy: 'Crear cronograma propio en cuanto exista asignación de línea y tutoría.'
-    },
-    {
-      id: 'optativa-1',
-      name: 'Optativa 1',
-      code: 'Pendiente',
-      semester: 'primer_cuatrimestre',
-      credits: 6,
-      type: 'Optativa',
-      status: 'por_decidir',
-      risk: 'bajo',
-      progress: 0,
-      examType: 'Pendiente',
-      evaluation: 'Pendiente',
-      notes: 'Sustituir por la optativa elegida tras revisar guías y exámenes.',
-      strategy: 'Priorizar asignaturas con preguntas repetidas y estructura de examen previsible.'
-    },
-    {
-      id: 'optativa-2',
-      name: 'Optativa 2',
-      code: 'Pendiente',
-      semester: 'primer_cuatrimestre',
-      credits: 6,
-      type: 'Optativa',
-      status: 'por_decidir',
-      risk: 'bajo',
-      progress: 0,
-      examType: 'Pendiente',
-      evaluation: 'Pendiente',
-      notes: 'Sustituir por la optativa elegida tras revisar guías y exámenes.',
-      strategy: 'Priorizar asignaturas con preguntas repetidas y estructura de examen previsible.'
-    }
-  ],
+  subjects: COURSE_SUBJECT_TEMPLATES.map(subject => ({ ...subject })),
   events: [
+    {
+      id: cryptoRandomId(),
+      title: 'Revisión inicial de guías y cronograma 1.º cuatrimestre',
+      subjectId: 'diseno-curriculo',
+      semester: 'primer_cuatrimestre',
+      type: 'Aviso',
+      date: '2026-09-15',
+      notes: 'Bloque inicial para cerrar evaluación, materiales mínimos y calendario de Diseño, Evaluación de Centros, Prácticas V y optativas.'
+    },
+    {
+      id: cryptoRandomId(),
+      title: 'Primer bloque de simulacros del 1.º cuatrimestre',
+      subjectId: 'evaluacion-centros',
+      semester: 'primer_cuatrimestre',
+      type: 'Repaso',
+      date: '2026-12-10',
+      notes: 'Fecha estratégica provisional para iniciar simulacros antes de exámenes del primer cuatrimestre.'
+    },
+    {
+      id: cryptoRandomId(),
+      title: 'Revisión de guías y materiales del 2.º cuatrimestre',
+      subjectId: 'evaluacion-programas',
+      semester: 'segundo_cuatrimestre',
+      type: 'Aviso',
+      date: '2027-02-15',
+      notes: 'Abrir planificación de Evaluación de Programas, Función Pedagógica, TFG, Bases y Métodos.'
+    },
     {
       id: cryptoRandomId(),
       title: 'PEC-1 autoevaluable de Métodos',
@@ -180,38 +257,15 @@ const DEFAULT_STATE = {
     },
     {
       id: cryptoRandomId(),
-      title: 'Revisión de guías tras matrícula',
-      subjectId: 'tfg',
-      semester: 'anual',
-      type: 'Aviso',
-      date: '2026-10-01',
-      notes: 'Actualizar fichas, evaluación, cronograma y materiales cuando el curso virtual esté operativo.'
-    }
-  ],
-  materials: [
-    {
-      id: cryptoRandomId(),
-      subjectId: 'metodos',
+      title: 'Primer bloque de simulacros del 2.º cuatrimestre',
+      subjectId: 'bases',
       semester: 'segundo_cuatrimestre',
-      title: 'Guía pública de Métodos 2026-2027',
-      kind: 'Guía',
-      source: 'UNED',
-      status: 'revisado',
-      notes: 'Documento base para la ficha inicial. Añadir manual cuando esté disponible.'
+      type: 'Repaso',
+      date: '2027-05-12',
+      notes: 'Fecha estratégica provisional para Bases, Métodos y resto de asignaturas del segundo cuatrimestre.'
     }
-  ],
-  exams: [
-    {
-      id: cryptoRandomId(),
-      subjectId: 'metodos',
-      semester: 'segundo_cuatrimestre',
-      year: '2026',
-      call: 'Junio · primera semana',
-      type: 'Mixto',
-      status: 'pendiente_analisis',
-      notes: 'Registrar preguntas exactas, temas y patrón de repetición.'
-    }
-  ],
+  ],  materials: COURSE_MATERIAL_TEMPLATES.map(material => ({ ...material })),
+  exams: COURSE_EXAM_SUMMARIES.map(exam => ({ ...exam })),
   attempts: [],
   questions: [],
   gradeRules: {}
@@ -296,6 +350,67 @@ function normalizeSubject(subject) {
   };
 }
 
+
+function mergeById(existingItems, templateItems, options = {}) {
+  const removeIds = options.removeIds || new Set();
+  const map = new Map();
+  existingItems
+    .filter(item => !removeIds.has(item.id))
+    .forEach(item => map.set(item.id, { ...item }));
+
+  templateItems.forEach(template => {
+    const current = map.get(template.id);
+    if (!current) {
+      map.set(template.id, { ...template });
+      return;
+    }
+    map.set(template.id, {
+      ...template,
+      ...current,
+      name: template.name,
+      code: template.code,
+      semester: template.semester,
+      credits: template.credits,
+      type: template.type,
+      examType: current.examType && !String(current.examType).includes('Pendiente') ? current.examType : template.examType,
+      evaluation: current.evaluation && !String(current.evaluation).includes('Pendiente') ? current.evaluation : template.evaluation,
+      notes: current.notes && !String(current.notes).includes('Ficha creada como estructura inicial') ? current.notes : template.notes,
+      strategy: current.strategy && !String(current.strategy).includes('Pendiente') ? current.strategy : template.strategy
+    });
+  });
+
+  const knownOrder = new Map(templateItems.map((item, index) => [item.id, index]));
+  return Array.from(map.values()).sort((a, b) => {
+    const orderA = knownOrder.has(a.id) ? knownOrder.get(a.id) : 999;
+    const orderB = knownOrder.has(b.id) ? knownOrder.get(b.id) : 999;
+    if (orderA !== orderB) return orderA - orderB;
+    return String(a.name || '').localeCompare(String(b.name || ''), 'es');
+  });
+}
+
+function reconcileAcademicTemplates(stateToReconcile) {
+  stateToReconcile.subjects = mergeById(stateToReconcile.subjects || [], COURSE_SUBJECT_TEMPLATES, { removeIds: OBSOLETE_INITIAL_SUBJECT_IDS }).map(normalizeSubject);
+  stateToReconcile.materials = mergeById(stateToReconcile.materials || [], COURSE_MATERIAL_TEMPLATES).map(material => ({
+    ...material,
+    semester: itemSemester(material)
+  }));
+  stateToReconcile.exams = mergeById(stateToReconcile.exams || [], COURSE_EXAM_SUMMARIES).map(exam => ({
+    ...exam,
+    semester: itemSemester(exam)
+  }));
+  return stateToReconcile;
+}
+
+function applyUiMode() {
+  document.body.classList.toggle('focus-mode', Boolean(state.ui?.focusMode));
+  const button = $('#focusModeBtn');
+  if (button) {
+    button.classList.toggle('active', Boolean(state.ui?.focusMode));
+    button.setAttribute('aria-pressed', String(Boolean(state.ui?.focusMode)));
+    button.textContent = state.ui?.focusMode ? 'Foco activo' : 'Modo foco';
+  }
+}
+
 function subjectById(id) {
   return state.subjects.find(subject => subject.id === id);
 }
@@ -336,6 +451,8 @@ function normalizeState(rawState) {
   merged.attempts = merged.attempts.map(attempt => ({ ...attempt, id: attempt.id || cryptoRandomId(), semester: itemSemester(attempt) }));
   merged.questions = merged.questions.map(question => ({ ...question, id: question.id || cryptoRandomId(), semester: itemSemester(question), frequency: Number(question.frequency || 1) }));
   merged.ui.semesterFilter = SEMESTERS[merged.ui.semesterFilter] ? merged.ui.semesterFilter : 'all';
+  merged.ui.focusMode = Boolean(merged.ui.focusMode);
+  reconcileAcademicTemplates(merged);
   return merged;
 }
 
@@ -857,6 +974,7 @@ function setView(viewId) {
   };
   $('#viewTitle').textContent = titles[viewId] || 'GRADUS';
   renderView(viewId);
+  applyUiMode();
 }
 
 function upcomingEvents(limit = 6) {
@@ -1084,7 +1202,33 @@ function renderHome() {
   const alerts = buildAcademicAlerts(6);
   const urgentAlerts = alerts.filter(alert => alert.severity === 'danger').length;
 
+  const plan = buildStudyPlan();
+  const topPlan = plan[0];
+  const topAlert = alerts[0];
+
   $('#inicio').innerHTML = `
+    <section class="hero-dashboard">
+      <div class="hero-copy">
+        <span class="hero-kicker">GRADUS · control académico inteligente</span>
+        <h3>Hoy, céntrate solo en lo siguiente.</h3>
+        <p>${topAlert ? escapeHtml(topAlert.text) : 'Cuando registres fechas y materiales, GRADUS priorizará por ti lo urgente, lo importante y lo que conviene repasar.'}</p>
+        <div class="hero-actions">
+          <button class="primary-action" data-jump-view="planificacion">Ver plan de hoy</button>
+          <button class="ghost-button" data-jump-view="simulacros">Preparar simulacro</button>
+        </div>
+      </div>
+      <div class="focus-stack">
+        <div class="focus-card pulse-card">
+          <span>1</span><strong>${topPlan ? escapeHtml(topPlan.subject.name) : 'Configurar asignaturas'}</strong><p>${topPlan ? `${escapeHtml(topPlan.minutes)} min · ${escapeHtml(topPlan.focus)}` : 'Completa datos oficiales, guías y fechas.'}</p>
+        </div>
+        <div class="focus-card">
+          <span>2</span><strong>${topAlert ? escapeHtml(topAlert.label) : 'Sin alerta crítica'}</strong><p>${topAlert ? escapeHtml(topAlert.title) : 'Todavía no hay fechas urgentes.'}</p>
+        </div>
+        <div class="focus-card">
+          <span>3</span><strong>Bloque TDAH</strong><p>Sesiones cortas, avisos visibles, tarjetas claras y siguiente acción concreta.</p>
+        </div>
+      </div>
+    </section>
     <div class="semester-strip">
       ${Object.entries(SEMESTERS).filter(([key]) => key !== 'all').map(([key, label]) => `
         <button class="semester-card ${activeSemesterFilter() === key ? 'active' : ''}" data-semester-jump="${key}">
@@ -2349,7 +2493,7 @@ function renderSettings() {
   $('#exportDataBtn').addEventListener('click', exportData);
   $('#syncNowBtn').addEventListener('click', () => persistStateToSupabase({ immediate: true }));
   $('#resetDataBtn').addEventListener('click', () => {
-    if (!confirm('¿Seguro que quieres restaurar los datos iniciales de GRADUS v0.6?')) return;
+    if (!confirm('¿Seguro que quieres restaurar los datos iniciales de GRADUS v0.7?')) return;
     state = normalizeState(DEFAULT_STATE);
     saveState();
     renderSettings();
@@ -2439,6 +2583,18 @@ async function deleteFromSupabase(collection, id) {
   } else {
     setSyncStatus('Sincronizado con Supabase', 'online');
   }
+}
+
+
+function setupFocusToggle() {
+  const button = $('#focusModeBtn');
+  if (!button) return;
+  button.addEventListener('click', () => {
+    state.ui.focusMode = !state.ui.focusMode;
+    applyUiMode();
+    saveState({ sync: false });
+  });
+  applyUiMode();
 }
 
 function setupGlobalActions() {
@@ -2534,6 +2690,7 @@ function setupPWA() {
 async function init() {
   setupNavigation();
   setupSemesterFilter();
+  setupFocusToggle();
   setupEventDialog();
   setupSubjectDialog();
   setupAuthDialog();
