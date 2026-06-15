@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gradus-cache-simple';
+const CACHE_NAME = 'gradus-cache-v010';
 const CORE = ['./', './index.html', './styles.css', './app.js', './manifest.json'];
 
 self.addEventListener('install', event => {
@@ -14,15 +14,12 @@ self.addEventListener('fetch', event => {
   event.respondWith(fetch(event.request).catch(() => caches.match(event.request).then(res => res || caches.match('./index.html'))));
 });
 
-self.addEventListener('message', event => {
-  const data = event.data || {};
-  if (data.type === 'GRADUS_NOTIFY') {
-    self.registration.showNotification(data.title || 'GRADUS', {
-      body: data.body || '',
-      icon: './assets/icon-192.png',
-      badge: './assets/icon-192.png',
-      tag: data.tag || 'gradus',
-      renotify: false
-    });
-  }
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const client of list) {
+      if ('focus' in client) return client.focus();
+    }
+    if (clients.openWindow) return clients.openWindow('./');
+  }));
 });

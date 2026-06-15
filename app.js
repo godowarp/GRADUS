@@ -206,12 +206,49 @@ const SIMULATIONS = [
   }
 ];
 
+const SUBJECT_COLORS = {
+  'diseno-curriculo': '#7c3aed',
+  'evaluacion-centros': '#d97706',
+  'practicas-v': '#16a34a',
+  'evaluacion-politicas': '#2563eb',
+  'educacion-economia': '#be123c',
+  'evaluacion-programas': '#0891b2',
+  'funcion-pedagogica': '#a21caf',
+  'tfg': '#334155',
+  'bases': '#0f766e',
+  'metodos': '#ea580c'
+};
+SUBJECTS.forEach(s => { if (SUBJECT_COLORS[s.id]) s.color = SUBJECT_COLORS[s.id]; });
+
+const SPECIAL_TRACKS = {
+  'tfg': [
+    'Elección y delimitación del tema',
+    'Contacto con tutor/a y acuerdo de enfoque',
+    'Búsqueda bibliográfica inicial',
+    'Estructura provisional del trabajo',
+    'Primer borrador',
+    'Revisión formal y APA 7',
+    'Entrega final',
+    'Preparación de la defensa'
+  ],
+  'practicas-v': [
+    'Lectura completa de la guía',
+    'Identificación de actividades obligatorias',
+    'Planificación de evidencias',
+    'Borrador de Actividad 1',
+    'Borrador de Actividad 2',
+    'Revisión de rúbrica y requisitos',
+    'Entrega final'
+  ]
+};
+
 const dom = {
   loginScreen: document.getElementById('loginScreen'),
   appShell: document.getElementById('appShell'),
   loginForm: document.getElementById('loginForm'),
   loginMessage: document.getElementById('loginMessage'),
   viewTitle: document.getElementById('viewTitle'),
+  viewEyebrow: document.getElementById('viewEyebrow'),
   views: document.querySelectorAll('.view'),
   nav: document.querySelectorAll('.nav-link'),
   signOutBtn: document.getElementById('signOutBtn'),
@@ -219,10 +256,6 @@ const dom = {
   addEventBtn: document.getElementById('addEventBtn'),
   eventDialog: document.getElementById('eventDialog'),
   eventForm: document.getElementById('eventForm'),
-  subjectDialog: document.getElementById('subjectDialog'),
-  subjectDialogTitle: document.getElementById('subjectDialogTitle'),
-  subjectDialogBody: document.getElementById('subjectDialogBody'),
-  closeSubjectDialog: document.getElementById('closeSubjectDialog'),
   simulationDialog: document.getElementById('simulationDialog'),
   simulationTitle: document.getElementById('simulationTitle'),
   simulationBody: document.getElementById('simulationBody'),
@@ -233,14 +266,21 @@ let supabaseClient = null;
 let session = null;
 let state = loadLocalState();
 let currentView = 'desk';
+let activeSubjectId = null;
 let calendarMode = 'month';
 let calendarDate = new Date();
 let currentSimulation = null;
-let simulationAnswers = {};
 
 function loadLocalState() {
+  const base = {
+    events: SEED_EVENTS,
+    materials: MATERIAL_TEMPLATES,
+    attempts: [],
+    studyLog: {},
+    taskChecks: {},
+    settings: { notifications: false, inactivityHour: '21:00' }
+  };
   const raw = localStorage.getItem(STORAGE_KEY);
-  const base = { events: SEED_EVENTS, materials: MATERIAL_TEMPLATES, attempts: [], studyLog: {}, settings: { notifications: false, inactivityHour: '21:00' } };
   if (!raw) return base;
   try {
     const parsed = JSON.parse(raw);
@@ -249,6 +289,7 @@ function loadLocalState() {
       materials: mergeById(MATERIAL_TEMPLATES, parsed.materials || []),
       attempts: parsed.attempts || [],
       studyLog: parsed.studyLog || {},
+      taskChecks: parsed.taskChecks || {},
       settings: { ...base.settings, ...(parsed.settings || {}) }
     };
   } catch {
@@ -258,12 +299,14 @@ function loadLocalState() {
 function saveLocalState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 function mergeById(a, b) { const map = new Map(); [...a, ...b].forEach(item => map.set(item.id, item)); return [...map.values()]; }
 function todayISO() { return new Date().toISOString().slice(0,10); }
-function toDate(str) { const [y,m,d] = str.split('-').map(Number); return new Date(y, m - 1, d); }
+function toDate(str) { const [y,m,d] = String(str).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); }
 function formatDate(str) { return toDate(str).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }); }
+function daysUntil(str) { const today = toDate(todayISO()); return Math.ceil((toDate(str) - today) / 86400000); }
 function subject(id) { return SUBJECTS.find(s => s.id === id) || SUBJECTS[0]; }
-function subjectStyle(id) { return `--subject-color:${subject(id).color}`; }
-function escapeHtml(value='') { return String(value).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
-
+function escapeHtml(value='') { return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch])); }
+function semesterName(semester) { return SEMESTERS[semester] || semester; }
+function hasExam(s) { return !/^no\b/i.test(s.exam || ''); }
+function hasPec(s) { return !/^no\b/i.test(s.pec || ''); }
 function getSupabase() {
   const cfg = window.GRADUS_SUPABASE;
   if (!window.supabase || !cfg?.url || !cfg?.anonKey) return null;
@@ -273,16 +316,15 @@ function getSupabase() {
 async function init() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   supabaseClient = getSupabase();
+  bindEvents();
   if (!supabaseClient) {
-    showLogin('No se puede iniciar sesión. Falta la configuración privada de GRADUS.');
+    showLogin('Falta la configuración privada de GRADUS.');
     return;
   }
   const { data } = await supabaseClient.auth.getSession();
   session = data.session;
-  bindEvents();
   if (session) await enterApp(); else showLogin();
 }
-
 function bindEvents() {
   dom.loginForm.addEventListener('submit', handleAuth);
   dom.signOutBtn.addEventListener('click', signOut);
@@ -290,56 +332,60 @@ function bindEvents() {
   dom.studyTodayBtn.addEventListener('click', markStudyToday);
   dom.addEventBtn.addEventListener('click', openEventDialog);
   dom.eventForm.addEventListener('submit', saveEvent);
-  dom.closeSubjectDialog.addEventListener('click', () => dom.subjectDialog.close());
   dom.closeSimulationDialog.addEventListener('click', () => dom.simulationDialog.close());
   document.addEventListener('click', handleDocumentClick);
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      const card = event.target.closest?.('[data-open-subject]');
+      if (card) openSubject(card.dataset.openSubject);
+    }
+  });
+  document.addEventListener('submit', event => {
+    const form = event.target.closest('[data-upload-form]');
+    if (form) { event.preventDefault(); handleUpload(form); }
+  });
   setInterval(checkStudyReminder, 60 * 1000);
+  setInterval(() => maybeNotifyUpcoming(false), 30 * 60 * 1000);
 }
-
 function showLogin(message='') {
   dom.appShell.hidden = true;
   dom.loginScreen.hidden = false;
   dom.loginMessage.textContent = message;
+  document.body.classList.add('login-only');
 }
-
 async function handleAuth(event) {
   event.preventDefault();
   const data = new FormData(dom.loginForm);
-  const email = data.get('email');
-  const password = data.get('password');
+  const email = String(data.get('email') || '').trim();
+  const password = String(data.get('password') || '');
   const action = event.submitter?.value || 'login';
   dom.loginMessage.textContent = 'Comprobando cuenta…';
+  const redirectTo = `${location.origin}${location.pathname}`;
   const result = action === 'signup'
-    ? await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: location.href } })
+    ? await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } })
     : await supabaseClient.auth.signInWithPassword({ email, password });
-  if (result.error) {
-    dom.loginMessage.textContent = result.error.message;
-    return;
-  }
-  if (action === 'signup' && !result.data.session) {
-    dom.loginMessage.textContent = 'Cuenta creada. Revisa el correo para confirmar el acceso.';
-    return;
-  }
+  if (result.error) { dom.loginMessage.textContent = result.error.message; return; }
+  if (action === 'signup' && !result.data.session) { dom.loginMessage.textContent = 'Cuenta creada. Revisa el correo para confirmar el acceso.'; return; }
   session = result.data.session;
   await enterApp();
 }
-
 async function enterApp() {
   dom.loginScreen.hidden = true;
   dom.appShell.hidden = false;
+  document.body.classList.remove('login-only');
   await seedSubjects();
   await loadRemoteData();
-  await markVisit();
+  markVisit();
   renderAll();
-  maybeNotifyUpcoming();
+  maybeNotifyUpcoming(false);
+  notifyIfPreviousDayMissed();
 }
-
 async function signOut() {
   if (supabaseClient) await supabaseClient.auth.signOut();
   session = null;
+  activeSubjectId = null;
   showLogin();
 }
-
 async function seedSubjects() {
   if (!session) return;
   const rows = SUBJECTS.map(s => ({
@@ -352,15 +398,14 @@ async function seedSubjects() {
     type: s.kind,
     status: 'activo',
     risk: ['bases','metodos','evaluacion-centros','practicas-v','tfg'].includes(s.id) ? 'alto' : 'medio',
-    progress: 0,
+    progress: Math.round(subjectProgress(s.id)),
     exam_type: s.exam,
     evaluation: s.weighting,
     notes: s.pec,
-    strategy: 'Consultar materiales, registrar fechas y practicar simulacros.'
+    strategy: hasExam(s) ? 'Trabajar materiales y realizar simulacros con registro de resultados.' : 'Trabajar por hitos, entregables y revisión de requisitos.'
   }));
-  await supabaseClient.from('subjects').upsert(rows).select().catch?.(() => {});
+  try { await supabaseClient.from('subjects').upsert(rows).select(); } catch {}
 }
-
 async function loadRemoteData() {
   if (!session) return;
   const user = session.user.id;
@@ -371,7 +416,7 @@ async function loadRemoteData() {
       supabaseClient.from('simulation_attempts').select('*').eq('user_id', user).order('created_at', { ascending: false })
     ]);
     if (!eventsRes.error && eventsRes.data?.length) {
-      const remoteEvents = eventsRes.data.map(e => ({ id: e.id, subjectId: e.subject_id, type: e.type, title: e.title, date: e.date, notes: e.notes || '', remote: true }));
+      const remoteEvents = eventsRes.data.map(e => ({ id: e.id, subjectId: e.subject_id, type: e.type, title: e.title, date: e.date, notes: e.notes || '', notice: e.notice || '7', remote: true }));
       state.events = mergeById(SEED_EVENTS, mergeById(state.events, remoteEvents));
     }
     if (!materialsRes.error && materialsRes.data?.length) {
@@ -384,33 +429,51 @@ async function loadRemoteData() {
     saveLocalState();
   } catch {}
 }
-
-async function markVisit() {
+function markVisit() {
   localStorage.setItem('gradus.lastVisit', todayISO());
 }
 
 function renderAll() {
   renderDesk();
   renderSubjects();
+  renderSubjectDetail();
   renderCalendar();
   renderSimulations();
   renderSettings();
 }
-
 function setView(view) {
   currentView = view;
+  if (view !== 'subjectDetail') activeSubjectId = null;
   dom.views.forEach(v => v.classList.toggle('active-view', v.id === view));
   dom.nav.forEach(n => n.classList.toggle('active', n.dataset.view === view));
-  dom.viewTitle.textContent = ({ desk:'Escritorio', subjects:'Asignaturas', calendar:'Calendario', simulations:'Simulacros', settings:'Cuenta y avisos' })[view];
+  const titles = { desk:'Inicio', subjects:'Asignaturas', subjectDetail: activeSubjectId ? subject(activeSubjectId).name : 'Asignatura', calendar:'Calendario', simulations:'Simulacros', settings:'Cuenta y avisos' };
+  const eyebrows = { desk:'Escritorio personal', subjects:'Archivador por asignaturas', subjectDetail:'Mesa de asignatura', calendar:'Corcho de fechas', simulations:'Práctica autocorregible', settings:'Acceso y notificaciones' };
+  dom.viewTitle.textContent = titles[view] || 'GRADUS';
+  dom.viewEyebrow.textContent = eyebrows[view] || 'GRADUS';
   renderAll();
 }
-
 function upcomingEvents(limit=7) {
-  const today = new Date(); today.setHours(0,0,0,0);
-  return state.events
-    .filter(e => e.date && toDate(e.date) >= today)
-    .sort((a,b) => toDate(a.date) - toDate(b.date))
-    .slice(0, limit);
+  const today = toDate(todayISO());
+  return state.events.filter(e => e.date && toDate(e.date) >= today).sort((a,b) => toDate(a.date)-toDate(b.date)).slice(0, limit);
+}
+function subjectProgress(subjectId) {
+  const s = subject(subjectId);
+  if (SPECIAL_TRACKS[subjectId]) {
+    const tasks = SPECIAL_TRACKS[subjectId];
+    const checked = tasks.filter((_, i) => state.taskChecks[`${subjectId}-${i}`]).length;
+    return tasks.length ? (checked / tasks.length) * 100 : 0;
+  }
+  const attempts = state.attempts.filter(a => a.subjectId === subjectId);
+  if (!attempts.length) return 0;
+  const best = Math.max(...attempts.map(a => Number(a.score) || 0));
+  const volume = Math.min(30, attempts.length * 7.5);
+  return Math.min(100, Math.round((best * 7) + volume));
+}
+function attemptStats(subjectId) {
+  const attempts = state.attempts.filter(a => a.subjectId === subjectId);
+  if (!attempts.length) return { count:0, best:null, avg:null, last:null };
+  const scores = attempts.map(a => Number(a.score) || 0);
+  return { count: attempts.length, best: Math.max(...scores), avg: scores.reduce((a,b)=>a+b,0)/scores.length, last: attempts[0] };
 }
 
 function renderDesk() {
@@ -418,46 +481,44 @@ function renderDesk() {
   const up = upcomingEvents(6);
   const today = todayISO();
   const studied = !!state.studyLog[today];
-  const activeSubjects = SUBJECTS.length;
+  const urgent = up.filter(e => daysUntil(e.date) <= 15).length;
   el.innerHTML = `
     <div class="grid two">
-      <div class="desk-board">
-        <p class="small-label">Hoy</p>
-        <h3>Tu mesa de trabajo</h3>
+      <section class="desk-panel">
         <div class="grid three">
-          <div class="card"><p>Asignaturas</p><div class="metric">${activeSubjects}</div><p>organizadas por color y cuatrimestre</p></div>
-          <div class="card"><p>Próximas fechas</p><div class="metric">${up.length}</div><p>entregas y avisos registrados</p></div>
-          <div class="card"><p>Estudio de hoy</p><div class="metric">${studied ? 'Sí' : 'No'}</div><p>${studied ? 'sesión registrada' : 'pulsa “He estudiado hoy” al empezar'}</p></div>
+          <article class="card"><p class="mini">Hoy</p><div class="metric">${studied ? '✓' : '—'}</div><p>${studied ? 'Estudio registrado' : 'Sin registro de estudio'}</p></article>
+          <article class="card"><p class="mini">Fechas próximas</p><div class="metric">${up.length}</div><p>${urgent} requieren atención en 15 días o menos</p></article>
+          <article class="card"><p class="mini">Simulacros</p><div class="metric">${state.attempts.length}</div><p>intentos guardados</p></article>
         </div>
         <div class="card" style="margin-top:16px">
-          <h3>Lo siguiente</h3>
-          ${up.length ? `<div class="next-list">${up.map(renderEventItem).join('')}</div>` : `<div class="empty">No hay fechas próximas. Añade exámenes y entregas cuando la UNED publique el calendario.</div>`}
+          <h3>Lo siguiente en el corcho</h3>
+          ${up.length ? `<div class="next-list">${up.map(renderEventItem).join('')}</div>` : `<div class="empty">Añade exámenes, entregas y tutorías para ver aquí tu ruta diaria.</div>`}
         </div>
-      </div>
-      <div class="card">
-        <h3>Asignaturas prioritarias</h3>
-        <p>Atajos para trabajar sin perder tiempo buscando carpetas.</p>
+      </section>
+      <aside class="card">
+        <h3>Asignaturas de trabajo inmediato</h3>
+        <p>Accede directamente a materiales, evaluación, simulacros e historial.</p>
         <div class="plain-list">
-          ${['evaluacion-centros','bases','metodos','tfg'].map(id => renderSubjectShortcut(subject(id))).join('')}
+          ${['evaluacion-centros','bases','metodos','tfg'].map(id => renderCompactSubject(subject(id))).join('')}
         </div>
-      </div>
+      </aside>
     </div>`;
 }
-
 function renderEventItem(e) {
   const s = subject(e.subjectId);
-  return `<article class="next-item" style="border-left-color:${s.color}">
+  const d = daysUntil(e.date);
+  return `<article class="next-item" style="--subject-color:${s.color}">
     <strong>${escapeHtml(e.title)}</strong>
     <span>${formatDate(e.date)} · ${escapeHtml(e.type)} · ${escapeHtml(s.name)}</span>
-    ${e.notes ? `<span>${escapeHtml(e.notes)}</span>` : ''}
+    <span>${d === 0 ? 'Hoy' : d > 0 ? `Faltan ${d} días` : `Hace ${Math.abs(d)} días`}${e.notes ? ` · ${escapeHtml(e.notes)}` : ''}</span>
   </article>`;
 }
-
-function renderSubjectShortcut(s) {
-  return `<article class="next-item" style="border-left-color:${s.color}">
+function renderCompactSubject(s) {
+  const progress = Math.round(subjectProgress(s.id));
+  return `<article class="next-item" data-open-subject="${s.id}" tabindex="0" role="button" style="--subject-color:${s.color}">
     <strong>${escapeHtml(s.name)}</strong>
-    <span>${escapeHtml(s.kind)} · ${SEMESTERS[s.semester]}</span>
-    <button class="quiet-button" data-open-subject="${s.id}">Abrir asignatura</button>
+    <span>${escapeHtml(s.kind)} · ${semesterName(s.semester)} · ${hasExam(s) ? 'con examen' : 'sin examen'}</span>
+    <div class="progress-track" style="--progress:${progress}%"><span></span></div>
   </article>`;
 }
 
@@ -466,107 +527,142 @@ function renderSubjects() {
   const first = SUBJECTS.filter(s => s.semester === 'primer');
   const second = SUBJECTS.filter(s => s.semester === 'segundo');
   el.innerHTML = `
-    <div class="tabs">
-      <button class="tab-button active" data-filter-subjects="all">Todo</button>
-      <button class="tab-button" data-filter-subjects="primer">Primer cuatrimestre</button>
-      <button class="tab-button" data-filter-subjects="segundo">Segundo cuatrimestre</button>
-    </div>
     ${renderSubjectGroup('Primer cuatrimestre', first)}
     ${renderSubjectGroup('Segundo cuatrimestre', second)}
   `;
 }
-
 function renderSubjectGroup(title, subjects) {
-  return `<div class="subject-group" data-semester-group="${title.startsWith('Primer') ? 'primer' : 'segundo'}">
+  return `<section class="subject-group">
     <div class="semester-title"><h3>${title}</h3><span class="muted">${subjects.length} asignaturas</span></div>
     <div class="grid subjects">${subjects.map(renderSubjectCard).join('')}</div>
-  </div>`;
+  </section>`;
 }
-
 function renderSubjectCard(s) {
-  return `<article class="subject-card" style="${subjectStyle(s.id)}">
-    <div class="subject-title">
-      <h3>${escapeHtml(s.name)}</h3>
-      <div class="subject-code">${escapeHtml(s.code)} · ${s.credits} ECTS</div>
-    </div>
+  const progress = Math.round(subjectProgress(s.id));
+  const stats = attemptStats(s.id);
+  return `<article class="subject-card" data-open-subject="${s.id}" tabindex="0" role="button" style="--subject-color:${s.color}">
+    <h3>${escapeHtml(s.name)}</h3>
+    <div class="subject-code">${escapeHtml(s.code)} · ${s.credits} ECTS · ${semesterName(s.semester)}</div>
     <div class="badge-row">
-      <span class="badge required">${escapeHtml(s.kind)}</span>
-      <span class="badge exam">${s.exam.startsWith('No') ? 'Sin examen' : 'Con examen'}</span>
-      <span class="badge pec">${s.pec.startsWith('No') ? 'Sin PEC' : 'Con PEC'}</span>
+      <span class="badge ok">${escapeHtml(s.kind)}</span>
+      <span class="badge exam">${hasExam(s) ? 'Con examen' : 'Sin examen'}</span>
+      <span class="badge pec">${hasPec(s) ? 'Con PEC / trabajos' : 'Sin PEC'}</span>
     </div>
-    <p class="muted">${escapeHtml(s.weighting)}</p>
-    <button class="quiet-button" data-open-subject="${s.id}">Abrir escritorio de asignatura</button>
+    <div class="progress-track" style="--progress:${progress}%"><span></span></div>
+    <div class="subject-card-footer">${progress}% · ${stats.count ? `${stats.count} simulacro(s)` : SPECIAL_TRACKS[s.id] ? 'seguimiento por hitos' : 'sin simulacros todavía'}</div>
   </article>`;
 }
-
 function openSubject(id) {
-  const s = subject(id);
-  const mats = state.materials.filter(m => m.subjectId === id);
-  dom.subjectDialogTitle.textContent = s.name;
-  dom.subjectDialogBody.innerHTML = `
-    <div class="detail-layout" style="padding:18px 20px 22px; --subject-color:${s.color}">
-      <section>
-        <div class="notice-box" style="border-left-color:${s.color}">
-          <strong>${escapeHtml(s.kind)} · ${SEMESTERS[s.semester]} · ${s.credits} ECTS</strong>
-          <p class="muted">Código ${escapeHtml(s.code)}</p>
-        </div>
-        <div class="card" style="margin-top:14px">
-          <h3>Ficha de evaluación</h3>
+  activeSubjectId = id;
+  currentView = 'subjectDetail';
+  dom.views.forEach(v => v.classList.toggle('active-view', v.id === 'subjectDetail'));
+  dom.nav.forEach(n => n.classList.remove('active'));
+  dom.viewTitle.textContent = subject(id).name;
+  dom.viewEyebrow.textContent = 'Mesa de asignatura';
+  renderSubjectDetail();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function renderSubjectDetail() {
+  const el = document.getElementById('subjectDetail');
+  if (!activeSubjectId) { el.innerHTML = `<div class="empty">Selecciona una asignatura.</div>`; return; }
+  const s = subject(activeSubjectId);
+  const mats = state.materials.filter(m => m.subjectId === s.id);
+  const sims = SIMULATIONS.filter(sim => sim.subjectId === s.id);
+  const stats = attemptStats(s.id);
+  const progress = Math.round(subjectProgress(s.id));
+  el.innerHTML = `
+    <section class="subject-hero" style="--subject-color:${s.color}">
+      <button class="plain-button" data-view-target="subjects" style="width:max-content">Volver a asignaturas</button>
+      <h3>${escapeHtml(s.name)}</h3>
+      <div class="badge-row">
+        <span class="badge ok">${escapeHtml(s.kind)}</span>
+        <span class="badge">${escapeHtml(s.code)}</span>
+        <span class="badge">${s.credits} ECTS</span>
+        <span class="badge exam">${hasExam(s) ? 'Con examen' : 'Sin examen'}</span>
+        <span class="badge pec">${hasPec(s) ? 'Con PEC / trabajos' : 'Sin PEC'}</span>
+      </div>
+      <div class="progress-track" style="--progress:${progress}%"><span></span></div>
+      <span class="mini">Progreso de trabajo: ${progress}%${stats.count ? ` · mejor simulacro: ${stats.best.toFixed(2)}/10` : ''}</span>
+    </section>
+    <div class="detail-layout" style="--subject-color:${s.color}">
+      <section class="grid">
+        <article class="card">
+          <h3>Evaluación y requisitos</h3>
           <div class="info-table">
+            <div class="info-row"><span>Tipo</span><span>${escapeHtml(s.kind)}</span></div>
             <div class="info-row"><span>Examen</span><span>${escapeHtml(s.exam)}</span></div>
             <div class="info-row"><span>PEC / trabajos</span><span>${escapeHtml(s.pec)}</span></div>
             <div class="info-row"><span>Ponderación</span><span>${escapeHtml(s.weighting)}</span></div>
           </div>
-        </div>
-        <div class="card" style="margin-top:14px">
-          <h3>Materiales de la asignatura</h3>
+        </article>
+        <article class="card">
+          <h3>Documentos de la asignatura</h3>
           ${renderMaterialSections(mats)}
           <form class="upload-row" data-upload-form="${s.id}">
             <label>Subir documento privado
-              <input type="file" name="file">
+              <input type="file" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png">
             </label>
             <label>Título del documento
               <input type="text" name="title" placeholder="Manual, guía, examen, orientaciones…">
             </label>
             <label>Tipo
-              <select name="kind"><option>Manual</option><option>Guía</option><option>Bibliografía</option><option>Examen</option><option>PEC</option><option>Otro</option></select>
+              <select name="kind"><option>Manual</option><option>Guía</option><option>Bibliografía</option><option>Examen</option><option>PEC</option><option>TFG</option><option>Prácticas</option><option>Otro</option></select>
             </label>
-            <button class="main-button" type="submit">Guardar documento</button>
+            <button class="primary-button" type="submit">Guardar documento</button>
           </form>
-        </div>
+        </article>
       </section>
-      <aside>
-        <div class="card">
-          <h3>Bibliografía básica</h3>
-          <div class="plain-list">${s.bibliography.manual.map(x => `<div class="doc-item" style="border-left-color:${s.color}"><strong>${escapeHtml(x)}</strong></div>`).join('')}</div>
-        </div>
-        <div class="card" style="margin-top:14px">
-          <h3>Complementaria</h3>
-          <div class="plain-list">${s.bibliography.complementary.map(x => `<div class="doc-item" style="border-left-color:${s.color}"><span>${escapeHtml(x)}</span></div>`).join('')}</div>
-        </div>
-        <div class="card" style="margin-top:14px">
-          <h3>Simulacros</h3>
-          ${SIMULATIONS.filter(sim => sim.subjectId === id).map(sim => `<button class="quiet-button" style="width:100%; margin:4px 0" data-start-sim="${sim.id}">${escapeHtml(sim.title)}</button>`).join('') || '<p class="muted">Sin simulacros todavía.</p>'}
-        </div>
+      <aside class="grid">
+        <article class="card">
+          <h3>${SPECIAL_TRACKS[s.id] ? 'Seguimiento especial' : 'Simulacros'}</h3>
+          ${SPECIAL_TRACKS[s.id] ? renderSpecialTrack(s.id) : renderSubjectSimulations(sims)}
+        </article>
+        <article class="card">
+          <h3>Historial de resultados</h3>
+          ${renderAttemptHistory(s.id)}
+        </article>
+        <article class="card">
+          <h3>Bibliografía</h3>
+          <div class="plain-list">
+            ${s.bibliography.manual.map(x => `<div class="doc-item" style="--subject-color:${s.color}"><strong>Manual básico</strong><span>${escapeHtml(x)}</span></div>`).join('')}
+            ${s.bibliography.complementary.map(x => `<div class="doc-item" style="--subject-color:${s.color}"><strong>Complementaria</strong><span>${escapeHtml(x)}</span></div>`).join('')}
+          </div>
+        </article>
       </aside>
     </div>`;
-  dom.subjectDialog.showModal();
 }
-
 function renderMaterialSections(mats) {
-  const kinds = ['Manual','Guía','Bibliografía','Examen','PEC','Otro'];
-  return kinds.map(kind => {
+  const kinds = ['Manual','Guía','Bibliografía','Examen','PEC','TFG','Prácticas','Otro'];
+  const html = kinds.map(kind => {
     const list = mats.filter(m => m.kind === kind);
     if (!list.length) return '';
     return `<div class="doc-section"><h4>${kind}</h4><div class="plain-list">${list.map(renderMaterialItem).join('')}</div></div>`;
-  }).join('') || `<div class="empty">Aún no hay materiales asociados.</div>`;
+  }).join('');
+  return html || `<div class="empty">Aún no hay archivos subidos para esta asignatura.</div>`;
 }
 function renderMaterialItem(m) {
-  return `<article class="doc-item">
+  const open = m.filePath ? `<button class="secondary-button" data-open-file="${escapeHtml(m.filePath)}">Abrir documento</button>` : `<span class="mini">Archivo pendiente de subir</span>`;
+  return `<article class="doc-item" style="--subject-color:${subject(m.subjectId).color}">
     <strong>${escapeHtml(m.title)}</strong>
-    <span>${escapeHtml(m.notes || '')}</span>
-    ${m.filePath ? `<button class="quiet-button" data-open-file="${escapeHtml(m.filePath)}">Abrir archivo</button>` : ''}
+    ${m.notes ? `<span>${escapeHtml(m.notes)}</span>` : ''}
+    ${open}
   </article>`;
+}
+function renderSubjectSimulations(sims) {
+  if (!sims.length) return `<div class="empty">Aún no hay simulacros fiables para esta asignatura.</div>`;
+  return `<div class="plain-list">${sims.map(sim => `<article class="doc-item" style="--subject-color:${subject(sim.subjectId).color}"><strong>${escapeHtml(sim.title)}</strong><span>${escapeHtml(sim.format)} · ${sim.questions.length} preguntas · repetible</span><button class="primary-button" data-start-sim="${sim.id}">Hacer simulacro</button></article>`).join('')}</div>`;
+}
+function renderAttemptHistory(subjectId) {
+  const attempts = state.attempts.filter(a => a.subjectId === subjectId);
+  if (!attempts.length) return `<div class="empty">Todavía no hay intentos registrados.</div>`;
+  return `<div class="plain-list">${attempts.slice(0,8).map(a => `<article class="attempt-item" style="--subject-color:${subject(subjectId).color}"><strong>${Number(a.score).toFixed(2)}/10 · ${escapeHtml(a.title)}</strong><span>${formatDate(a.date)} · ${escapeHtml(a.notes || '')}</span></article>`).join('')}</div>`;
+}
+function renderSpecialTrack(subjectId) {
+  const tasks = SPECIAL_TRACKS[subjectId] || [];
+  return `<div class="task-list">${tasks.map((task, i) => {
+    const key = `${subjectId}-${i}`;
+    return `<label class="task-item"><input type="checkbox" data-task-key="${key}" ${state.taskChecks[key] ? 'checked' : ''}><span>${escapeHtml(task)}</span></label>`;
+  }).join('')}</div>`;
 }
 
 function renderCalendar() {
@@ -577,27 +673,24 @@ function renderCalendar() {
       <button class="tab-button ${calendarMode === 'semester' ? 'active' : ''}" data-calendar-mode="semester">Cuatrimestre completo</button>
     </div>
     <div class="calendar-layout">
-      <div class="calendar-panel">
-        ${calendarMode === 'month' ? renderMonthCalendar() : renderSemesterTimeline()}
-      </div>
+      <div class="calendar-panel">${calendarMode === 'month' ? renderMonthCalendar() : renderSemesterTimeline()}</div>
       <aside class="card">
-        <h3>Leyenda por asignatura</h3>
-        <div class="plain-list">${SUBJECTS.map(s => `<div class="next-item" style="border-left-color:${s.color}"><strong>${escapeHtml(s.name)}</strong><span>${SEMESTERS[s.semester]}</span></div>`).join('')}</div>
+        <h3>Leyenda</h3>
+        <div class="plain-list">${SUBJECTS.map(s => `<article class="next-item" data-open-subject="${s.id}" style="--subject-color:${s.color}"><strong>${escapeHtml(s.name)}</strong><span>${semesterName(s.semester)}</span></article>`).join('')}</div>
       </aside>
     </div>`;
 }
-
 function renderMonthCalendar() {
   const y = calendarDate.getFullYear();
   const m = calendarDate.getMonth();
   const first = new Date(y, m, 1);
   const start = new Date(first); start.setDate(first.getDate() - ((first.getDay() + 6) % 7));
   const cells = [];
-  for (let i=0; i<42; i++) { const d = new Date(start); d.setDate(start.getDate()+i); cells.push(d); }
+  for (let i = 0; i < 42; i++) { const d = new Date(start); d.setDate(start.getDate() + i); cells.push(d); }
   return `<div class="calendar-head">
-    <button class="quiet-button" data-month-move="-1">Anterior</button>
-    <h3>${calendarDate.toLocaleDateString('es-ES', { month:'long', year:'numeric' })}</h3>
-    <button class="quiet-button" data-month-move="1">Siguiente</button>
+    <button class="plain-button" data-month-move="-1">Anterior</button>
+    <div style="text-align:center"><h3>${calendarDate.toLocaleDateString('es-ES', { month:'long', year:'numeric' })}</h3><button class="plain-button" data-calendar-today>Hoy</button></div>
+    <button class="plain-button" data-month-move="1">Siguiente</button>
   </div>
   <div class="calendar-grid">
     ${['L','M','X','J','V','S','D'].map(d => `<div class="weekday">${d}</div>`).join('')}
@@ -606,53 +699,48 @@ function renderMonthCalendar() {
 }
 function renderDayCell(d, visibleMonth) {
   const iso = d.toISOString().slice(0,10);
-  const events = state.events.filter(e => e.date === iso);
-  return `<div class="day-cell ${d.getMonth() !== visibleMonth ? 'out' : ''}">
-    <div class="day-num">${d.getDate()}</div>
-    ${events.map(e => `<span class="event-chip" style="background:${subject(e.subjectId).color}" title="${escapeHtml(e.title)}">${escapeHtml(e.type)} · ${escapeHtml(e.title)}</span>`).join('')}
+  const events = state.events.filter(e => e.date === iso).sort((a,b) => String(a.type).localeCompare(String(b.type)));
+  const isToday = iso === todayISO();
+  return `<div class="day-cell ${d.getMonth() !== visibleMonth ? 'out' : ''} ${isToday ? 'today' : ''}">
+    <div class="day-num">${d.getDate()}${isToday ? ' · hoy' : ''}</div>
+    ${events.map(e => `<span class="event-chip ${escapeHtml(e.type)}" style="--subject-color:${subject(e.subjectId).color}" title="${escapeHtml(e.title)}">${escapeHtml(e.type)} · ${escapeHtml(e.title)}</span>`).join('')}
   </div>`;
 }
 function renderSemesterTimeline() {
-  const grouped = {};
+  const months = {};
   state.events.slice().sort((a,b) => toDate(a.date)-toDate(b.date)).forEach(e => {
     const d = toDate(e.date);
     const key = d.toLocaleDateString('es-ES', { month:'long', year:'numeric' });
-    (grouped[key] ||= []).push(e);
+    (months[key] ||= []).push(e);
   });
-  return `<div class="calendar-head"><h3>Cuatrimestre completo</h3><button class="main-button small" data-add-event> Añadir fecha </button></div>
-    <div class="semester-timeline">${Object.keys(grouped).length ? Object.entries(grouped).map(([month, events]) => `<div class="month-band"><h4>${month}</h4><div class="plain-list">${events.map(renderEventItem).join('')}</div></div>`).join('') : '<div class="empty">No hay fechas registradas.</div>'}</div>`;
+  const body = Object.entries(months).map(([month, events]) => `<section class="month-band"><h4>${month}</h4><div class="plain-list">${events.map(renderEventItem).join('')}</div></section>`).join('');
+  return `<div class="calendar-head"><h3>Cuatrimestre completo</h3><button class="secondary-button" data-add-event>Añadir fecha</button></div><div class="semester-timeline">${body || '<div class="empty">Añade fechas para construir el calendario del curso.</div>'}</div>`;
 }
 
 function renderSimulations() {
   const el = document.getElementById('simulations');
-  el.innerHTML = `<div class="sim-grid">${SIMULATIONS.map(sim => {
-    const s = subject(sim.subjectId);
-    const attempts = state.attempts.filter(a => a.title === sim.title);
-    const last = attempts[0];
+  const bySubject = SIMULATIONS.reduce((acc, sim) => { (acc[sim.subjectId] ||= []).push(sim); return acc; }, {});
+  el.innerHTML = `<div class="sim-grid">${Object.entries(bySubject).map(([subjectId, sims]) => {
+    const s = subject(subjectId);
+    const stats = attemptStats(subjectId);
     return `<article class="card sim-card" style="--subject-color:${s.color}">
-      <p class="small-label">${escapeHtml(s.name)}</p>
-      <h3>${escapeHtml(sim.title)}</h3>
-      <p>${escapeHtml(sim.format)} · ${sim.questions.length} preguntas · ${sim.duration} minutos orientativos</p>
-      ${last ? `<p><strong>Último intento:</strong> ${Number(last.score).toFixed(2)}/10 · ${formatDate(last.date)}</p>` : '<p class="muted">Sin intentos registrados.</p>'}
-      <button class="main-button" data-start-sim="${sim.id}">Empezar</button>
+      <h3>${escapeHtml(s.name)}</h3>
+      <p>${sims.length} simulacro(s) autocorregibles. Puedes repetirlos tantas veces como quieras.</p>
+      <div class="badge-row"><span class="badge">Intentos: ${stats.count}</span>${stats.best !== null ? `<span class="badge ok">Mejor: ${stats.best.toFixed(2)}/10</span>` : ''}</div>
+      <div class="plain-list">${sims.map(sim => `<button class="secondary-button" data-start-sim="${sim.id}">${escapeHtml(sim.title)}</button>`).join('')}</div>
     </article>`;
   }).join('')}</div>`;
 }
-
 function startSimulation(id) {
   currentSimulation = SIMULATIONS.find(s => s.id === id);
-  simulationAnswers = {};
   if (!currentSimulation) return;
   const s = subject(currentSimulation.subjectId);
   dom.simulationTitle.textContent = currentSimulation.title;
   dom.simulationBody.innerHTML = `<div style="padding:18px 20px 22px; --subject-color:${s.color}">
-    <div class="notice-box" style="border-left-color:${s.color}">
-      <strong>${escapeHtml(currentSimulation.format)}</strong>
-      <p class="muted">Responde y corrige al final. Las preguntas de desarrollo de las asignaturas mixtas requieren revisión humana; aquí se practica la parte autocorregible.</p>
-    </div>
+    <div class="notice-box"><strong>${escapeHtml(s.name)}</strong><p class="muted">${escapeHtml(currentSimulation.format)} · ${currentSimulation.duration} minutos · intento repetible y registrable.</p></div>
     <form id="simulationForm">
-      ${currentSimulation.questions.map((q, i) => renderQuestion(q, i)).join('')}
-      <div class="dialog-actions"><button class="main-button" type="submit">Corregir simulacro</button></div>
+      ${currentSimulation.questions.map(renderQuestion).join('')}
+      <div class="dialog-actions"><button class="primary-button" type="submit">Corregir y guardar intento</button></div>
     </form>
     <div id="simulationResult"></div>
   </div>`;
@@ -672,94 +760,105 @@ async function correctSimulation(event) {
     if (!given) blank++;
     const ok = given === q.a;
     if (ok) correct++;
-    return { question: q.q, given, correct: q.a, ok, exp: q.exp };
+    return { question: q.q, given: given || '', correct: q.a, ok, exp: q.exp || '' };
   });
   const score = Math.max(0, (correct / currentSimulation.questions.length) * 10);
-  const resultEl = document.getElementById('simulationResult');
-  resultEl.innerHTML = `<div class="result-box ${score < 5 ? 'error' : ''}">
+  document.getElementById('simulationResult').innerHTML = `<div class="result-box ${score < 5 ? 'error' : ''}">
     <h3>Resultado: ${score.toFixed(2)}/10</h3>
     <p>Aciertos: ${correct}. Blancos: ${blank}. Errores: ${currentSimulation.questions.length - correct - blank}.</p>
-    <div class="plain-list">${details.map((d,i) => `<div class="doc-item" style="border-left-color:${d.ok ? '#557a46' : '#9c332d'}"><strong>${i+1}. ${d.ok ? 'Correcta' : 'Revisar'}</strong><span>Tu respuesta: ${escapeHtml(d.given || 'en blanco')} · Correcta: ${escapeHtml(d.correct)}</span><span>${escapeHtml(d.exp)}</span></div>`).join('')}</div>
+    <div class="plain-list">${details.map((d,i) => `<article class="doc-item" style="--subject-color:${d.ok ? '#28745a' : '#b33a3a'}"><strong>${i+1}. ${d.ok ? 'Correcta' : 'Revisar'}</strong><span>Tu respuesta: ${escapeHtml(d.given || 'en blanco')}</span><span>Correcta: ${escapeHtml(d.correct)}</span>${d.exp ? `<span>${escapeHtml(d.exp)}</span>` : ''}</article>`).join('')}</div>
   </div>`;
   const attempt = { id: crypto.randomUUID(), subjectId: currentSimulation.subjectId, title: currentSimulation.title, score, date: todayISO(), notes: `${correct}/${currentSimulation.questions.length} aciertos` };
   state.attempts = [attempt, ...state.attempts];
   saveLocalState();
   if (session) {
-    await supabaseClient.from('simulation_attempts').insert({ user_id: session.user.id, subject_id: attempt.subjectId, semester: subject(attempt.subjectId).semester === 'primer' ? 'primer_cuatrimestre' : 'segundo_cuatrimestre', title: attempt.title, score: attempt.score, date: attempt.date, notes: attempt.notes, answers: details }).catch?.(() => {});
+    try {
+      await supabaseClient.from('simulation_attempts').insert({
+        user_id: session.user.id,
+        subject_id: attempt.subjectId,
+        semester: subject(attempt.subjectId).semester === 'primer' ? 'primer_cuatrimestre' : 'segundo_cuatrimestre',
+        title: attempt.title,
+        score: attempt.score,
+        date: attempt.date,
+        notes: attempt.notes,
+        answers: details
+      });
+    } catch {}
   }
   renderSimulations();
+  if (activeSubjectId) renderSubjectDetail();
 }
 
 function renderSettings() {
   const el = document.getElementById('settings');
   const permission = 'Notification' in window ? Notification.permission : 'no disponible';
   el.innerHTML = `<div class="grid two">
-    <div class="card">
-      <h3>Avisos</h3>
-      <p>GRADUS puede avisarte de entregas próximas y recordarte que registres estudio diario.</p>
+    <article class="card">
+      <h3>Notificaciones</h3>
+      <p>GRADUS avisará de fechas próximas cuando la app tenga permiso de notificación en el navegador o en la PWA instalada.</p>
       <div class="info-table">
-        <div class="info-row"><span>Permiso</span><span>${escapeHtml(permission)}</span></div>
-        <div class="info-row"><span>Estado</span><span>${state.settings.notifications ? 'Activados en GRADUS' : 'Desactivados en GRADUS'}</span></div>
+        <div class="info-row"><span>Permiso del navegador</span><span>${escapeHtml(permission)}</span></div>
+        <div class="info-row"><span>Estado en GRADUS</span><span>${state.settings.notifications ? 'Activadas' : 'Desactivadas'}</span></div>
+        <div class="info-row"><span>Recordatorio diario</span><span>${escapeHtml(state.settings.inactivityHour)}</span></div>
       </div>
       <div class="dialog-actions" style="padding-left:0; padding-right:0">
-        <button class="main-button" data-enable-notifications>Activar avisos</button>
-        <button class="quiet-button" data-test-notification>Probar aviso</button>
+        <button class="primary-button" data-enable-notifications>Activar notificaciones</button>
+        <button class="secondary-button" data-test-notification>Probar aviso</button>
       </div>
-    </div>
-    <div class="card">
+      <div class="notice-box"><strong>Aviso técnico</strong><p class="muted">Las notificaciones funcionan mejor si GRADUS está instalada en el móvil como app. Las notificaciones push totalmente independientes de abrir la app requieren una fase posterior con servicio push.</p></div>
+    </article>
+    <article class="card">
       <h3>Cuenta</h3>
       <p>Sesión iniciada como <strong>${escapeHtml(session?.user?.email || '')}</strong>.</p>
-      <button class="quiet-button" id="settingsSignOut">Cerrar sesión</button>
-      <div class="notice-box" style="margin-top:14px">
-        <strong>Avisos en el móvil</strong>
-        <p class="muted">Instala GRADUS en el móvil y mantén permitidas las notificaciones para recibir avisos de estudio y fechas próximas.</p>
-      </div>
-    </div>
+      <button class="danger-button" id="settingsSignOut">Cerrar sesión</button>
+    </article>
   </div>`;
   document.getElementById('settingsSignOut')?.addEventListener('click', signOut);
 }
-
 function openEventDialog() {
   const select = dom.eventForm.elements.subjectId;
   select.innerHTML = SUBJECTS.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
   dom.eventForm.reset();
+  dom.eventForm.elements.date.value = todayISO();
   dom.eventDialog.showModal();
 }
 async function saveEvent(event) {
   event.preventDefault();
   const data = new FormData(dom.eventForm);
   const s = subject(data.get('subjectId'));
-  const item = { id: crypto.randomUUID(), subjectId: s.id, title: data.get('title'), type: data.get('type'), date: data.get('date'), notes: data.get('notes') || '', notice: data.get('notice') };
+  const item = { id: crypto.randomUUID(), subjectId: s.id, title: data.get('title'), type: data.get('type'), date: data.get('date'), notes: data.get('notes') || '', notice: data.get('notice') || '7' };
   state.events.push(item);
   saveLocalState();
   if (session) {
-    const { data: inserted } = await supabaseClient.from('academic_events').insert({ user_id: session.user.id, subject_id: item.subjectId, semester: s.semester === 'primer' ? 'primer_cuatrimestre' : 'segundo_cuatrimestre', title: item.title, type: item.type, date: item.date, notes: item.notes }).select().single().catch?.(() => ({ data: null }));
-    if (inserted?.id) item.id = inserted.id;
+    try {
+      const { data: inserted } = await supabaseClient.from('academic_events').insert({ user_id: session.user.id, subject_id: item.subjectId, semester: s.semester === 'primer' ? 'primer_cuatrimestre' : 'segundo_cuatrimestre', title: item.title, type: item.type, date: item.date, notes: item.notes }).select().single();
+      if (inserted?.id) item.id = inserted.id;
+    } catch {}
   }
   dom.eventDialog.close();
   renderAll();
   maybeNotifyUpcoming(true);
 }
-
 async function markStudyToday() {
   state.studyLog[todayISO()] = { at: new Date().toISOString() };
   saveLocalState();
   await notify('GRADUS', 'Sesión de estudio registrada para hoy.', 'study');
   renderDesk();
+  if (activeSubjectId) renderSubjectDetail();
 }
-
 async function enableNotifications() {
   if (!('Notification' in window)) return alert('Este navegador no permite notificaciones.');
   const perm = await Notification.requestPermission();
   state.settings.notifications = perm === 'granted';
   saveLocalState();
   renderSettings();
-  if (perm === 'granted') await notify('GRADUS', 'Avisos activados.', 'enabled');
+  if (perm === 'granted') await notify('GRADUS', 'Notificaciones activadas.', 'enabled');
 }
 async function notify(title, body, tag='gradus') {
   if (!state.settings.notifications || !('Notification' in window) || Notification.permission !== 'granted') return;
-  if (navigator.serviceWorker?.controller) {
-    navigator.serviceWorker.controller.postMessage({ type:'GRADUS_NOTIFY', title, body, tag });
+  if (navigator.serviceWorker?.ready) {
+    const reg = await navigator.serviceWorker.ready;
+    reg.showNotification(title, { body, tag, icon:'assets/icon-192.png', badge:'assets/icon-192.png' });
   } else {
     new Notification(title, { body, tag, icon:'assets/icon-192.png' });
   }
@@ -768,12 +867,13 @@ function maybeNotifyUpcoming(force=false) {
   if (!state.settings.notifications) return;
   const today = todayISO();
   const keyPrefix = `gradus.notified.${today}`;
-  upcomingEvents(10).forEach(e => {
-    const days = Math.ceil((toDate(e.date) - toDate(today)) / 86400000);
-    if (days >= 0 && days <= 7) {
+  state.events.forEach(e => {
+    const d = daysUntil(e.date);
+    const notice = Number(e.notice || 7);
+    if (d >= 0 && d <= notice) {
       const key = `${keyPrefix}.${e.id}`;
       if (force || !localStorage.getItem(key)) {
-        notify('Fecha próxima en GRADUS', `${e.title}: ${formatDate(e.date)} (${subject(e.subjectId).name})`, `event-${e.id}`);
+        notify('GRADUS: fecha próxima', `${e.title}: ${formatDate(e.date)} · ${subject(e.subjectId).name}`, `event-${e.id}`);
         localStorage.setItem(key, '1');
       }
     }
@@ -786,11 +886,20 @@ function checkStudyReminder() {
   if (now.getHours() !== h || now.getMinutes() !== m) return;
   const key = `gradus.studyReminder.${todayISO()}`;
   if (!state.studyLog[todayISO()] && !localStorage.getItem(key)) {
-    notify('GRADUS', 'Hoy no has registrado estudio. Entra un momento y deja cerrada la sesión del día.', 'daily-study');
+    notify('GRADUS: estudio diario', 'Hoy no has registrado estudio. Entra un momento y deja cerrada la sesión del día.', 'daily-study');
     localStorage.setItem(key, '1');
   }
 }
-
+function notifyIfPreviousDayMissed() {
+  if (!state.settings.notifications) return;
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  const y = yesterday.toISOString().slice(0,10);
+  const key = `gradus.missed.${y}`;
+  if (!state.studyLog[y] && !localStorage.getItem(key)) {
+    notify('GRADUS: revisión pendiente', 'Ayer no consta una sesión de estudio registrada.', 'missed-day');
+    localStorage.setItem(key, '1');
+  }
+}
 async function handleUpload(form) {
   const subjectId = form.dataset.uploadForm;
   const file = form.elements.file.files[0];
@@ -799,7 +908,8 @@ async function handleUpload(form) {
   if (!file) return alert('Selecciona un archivo.');
   let filePath = '';
   if (session) {
-    const path = `${session.user.id}/${subjectId}/${Date.now()}-${file.name}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '-');
+    const path = `${session.user.id}/${subjectId}/${Date.now()}-${safeName}`;
     const { error } = await supabaseClient.storage.from(MATERIAL_BUCKET).upload(path, file, { upsert: false });
     if (!error) filePath = path;
   }
@@ -807,41 +917,40 @@ async function handleUpload(form) {
   state.materials.push(item);
   saveLocalState();
   if (session) {
-    await supabaseClient.from('materials').insert({ user_id: session.user.id, subject_id: subjectId, semester: subject(subjectId).semester === 'primer' ? 'primer_cuatrimestre' : 'segundo_cuatrimestre', title, kind, notes: file.name, file_path: filePath }).catch?.(() => {});
+    try { await supabaseClient.from('materials').insert({ user_id: session.user.id, subject_id: subjectId, semester: subject(subjectId).semester === 'primer' ? 'primer_cuatrimestre' : 'segundo_cuatrimestre', title, kind, notes: file.name, file_path: filePath }); } catch {}
   }
-  openSubject(subjectId);
+  renderSubjectDetail();
 }
 async function openFile(path) {
-  if (!session || !path) return;
-  const { data, error } = await supabaseClient.storage.from(MATERIAL_BUCKET).createSignedUrl(path, 60 * 5);
+  if (!session || !path) return alert('Archivo pendiente de subir.');
+  const { data, error } = await supabaseClient.storage.from(MATERIAL_BUCKET).createSignedUrl(path, 60 * 10);
   if (!error && data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener');
+  else alert('No he podido abrir el documento. Revisa las políticas de Storage.');
 }
-
 function handleDocumentClick(event) {
-  const subjectBtn = event.target.closest('[data-open-subject]');
-  if (subjectBtn) openSubject(subjectBtn.dataset.openSubject);
+  const viewBtn = event.target.closest('[data-view-target]');
+  if (viewBtn) { setView(viewBtn.dataset.viewTarget); return; }
+  const subjectEl = event.target.closest('[data-open-subject]');
+  if (subjectEl) { openSubject(subjectEl.dataset.openSubject); return; }
   const simBtn = event.target.closest('[data-start-sim]');
-  if (simBtn) startSimulation(simBtn.dataset.startSim);
+  if (simBtn) { startSimulation(simBtn.dataset.startSim); return; }
   const modeBtn = event.target.closest('[data-calendar-mode]');
-  if (modeBtn) { calendarMode = modeBtn.dataset.calendarMode; renderCalendar(); }
+  if (modeBtn) { calendarMode = modeBtn.dataset.calendarMode; renderCalendar(); return; }
   const monthBtn = event.target.closest('[data-month-move]');
-  if (monthBtn) { calendarDate.setMonth(calendarDate.getMonth() + Number(monthBtn.dataset.monthMove)); renderCalendar(); }
-  if (event.target.closest('[data-add-event]')) openEventDialog();
-  if (event.target.closest('[data-enable-notifications]')) enableNotifications();
-  if (event.target.closest('[data-test-notification]')) notify('GRADUS', 'Este es un aviso de prueba.', 'test');
+  if (monthBtn) { calendarDate.setMonth(calendarDate.getMonth() + Number(monthBtn.dataset.monthMove)); renderCalendar(); return; }
+  if (event.target.closest('[data-calendar-today]')) { calendarDate = new Date(); renderCalendar(); return; }
+  if (event.target.closest('[data-add-event]')) { openEventDialog(); return; }
+  if (event.target.closest('[data-enable-notifications]')) { enableNotifications(); return; }
+  if (event.target.closest('[data-test-notification]')) { notify('GRADUS', 'Este es un aviso de prueba.', 'test'); return; }
   const fileBtn = event.target.closest('[data-open-file]');
-  if (fileBtn) openFile(fileBtn.dataset.openFile);
-  const filterBtn = event.target.closest('[data-filter-subjects]');
-  if (filterBtn) {
-    const val = filterBtn.dataset.filterSubjects;
-    document.querySelectorAll('[data-filter-subjects]').forEach(b => b.classList.toggle('active', b === filterBtn));
-    document.querySelectorAll('[data-semester-group]').forEach(g => g.style.display = (val === 'all' || g.dataset.semesterGroup === val) ? '' : 'none');
+  if (fileBtn) { openFile(fileBtn.dataset.openFile); return; }
+  const task = event.target.closest('[data-task-key]');
+  if (task) {
+    state.taskChecks[task.dataset.taskKey] = task.checked;
+    saveLocalState();
+    renderSubjectDetail();
+    return;
   }
 }
-
-document.addEventListener('submit', event => {
-  const form = event.target.closest('[data-upload-form]');
-  if (form) { event.preventDefault(); handleUpload(form); }
-});
 
 init();

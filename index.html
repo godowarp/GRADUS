@@ -3,18 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#efe9dd">
+  <meta name="theme-color" content="#f4f1ec">
   <title>GRADUS</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="loginScreen" class="login-screen" hidden>
+  <main id="loginScreen" class="login-screen" hidden>
     <section class="login-card" aria-labelledby="loginTitle">
-      <div class="login-logo" aria-hidden="true">G</div>
-      <p class="login-kicker">Pedagogía UNED</p>
-      <h1 id="loginTitle">GRADUS</h1>
-      <p class="login-subtitle">Tu escritorio privado de estudio, materiales, calendario y simulacros.</p>
+      <div class="wordmark" aria-hidden="true">
+        <span class="wordmark-symbol">G</span>
+        <span>GRADUS</span>
+      </div>
+      <p class="login-kicker">Pedagogía UNED · Curso 2026-2027</p>
+      <h1 id="loginTitle">Tu escritorio de carrera</h1>
+      <p class="login-subtitle">Asignaturas, documentos, calendario, avisos y simulacros en un espacio privado.</p>
       <form id="loginForm" class="login-form">
         <label>Correo
           <input name="email" type="email" autocomplete="email" required placeholder="tu correo">
@@ -23,44 +26,48 @@
           <input name="password" type="password" autocomplete="current-password" minlength="6" required placeholder="contraseña de GRADUS">
         </label>
         <p id="loginMessage" class="form-message" aria-live="polite"></p>
-        <button class="main-button" type="submit" name="action" value="login">Entrar</button>
-        <button class="text-button" type="submit" name="action" value="signup">Crear cuenta</button>
+        <div class="login-actions">
+          <button class="primary-button" type="submit" name="action" value="login">Entrar</button>
+          <button class="secondary-button" type="submit" name="action" value="signup">Crear cuenta</button>
+        </div>
       </form>
     </section>
-  </div>
+  </main>
 
   <div id="appShell" class="app-shell" hidden>
     <aside class="sidebar" aria-label="Navegación principal">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">G</div>
+        <span class="brand-symbol">G</span>
         <div>
           <h1>GRADUS</h1>
-          <p>Curso 2026-2027</p>
+          <p>Escritorio académico</p>
         </div>
       </div>
       <nav class="main-nav">
-        <button class="nav-link active" data-view="desk">Escritorio</button>
+        <button class="nav-link active" data-view="desk">Inicio</button>
         <button class="nav-link" data-view="subjects">Asignaturas</button>
         <button class="nav-link" data-view="calendar">Calendario</button>
         <button class="nav-link" data-view="simulations">Simulacros</button>
-        <button class="nav-link" data-view="settings">Cuenta y avisos</button>
+        <button class="nav-link" data-view="settings">Cuenta</button>
       </nav>
-      <button id="signOutBtn" class="quiet-button">Cerrar sesión</button>
+      <button id="signOutBtn" class="plain-button sidebar-exit">Cerrar sesión</button>
     </aside>
 
     <main class="main-panel">
       <header class="topbar">
         <div>
-          <p class="small-label">Entorno personal de aprendizaje</p>
-          <h2 id="viewTitle">Escritorio</h2>
+          <p id="viewEyebrow" class="eyebrow">Escritorio personal</p>
+          <h2 id="viewTitle">Inicio</h2>
         </div>
         <div class="topbar-actions">
-          <button id="studyTodayBtn" class="study-button">He estudiado hoy</button>
-          <button id="addEventBtn" class="main-button small">Añadir fecha</button>
+          <button id="studyTodayBtn" class="secondary-button">Registrar estudio de hoy</button>
+          <button id="addEventBtn" class="primary-button">Añadir fecha</button>
         </div>
       </header>
+
       <section id="desk" class="view active-view"></section>
       <section id="subjects" class="view"></section>
+      <section id="subjectDetail" class="view"></section>
       <section id="calendar" class="view"></section>
       <section id="simulations" class="view"></section>
       <section id="settings" class="view"></section>
@@ -94,7 +101,9 @@
         </label>
         <label>Aviso
           <select name="notice">
-            <option value="7">7 días antes</option>
+            <option value="30">30 días antes</option>
+            <option value="15">15 días antes</option>
+            <option value="7" selected>7 días antes</option>
             <option value="3">3 días antes</option>
             <option value="1">1 día antes</option>
             <option value="0">El mismo día</option>
@@ -105,18 +114,10 @@
         </label>
       </div>
       <div class="dialog-actions">
-        <button class="quiet-button" value="cancel">Cancelar</button>
-        <button class="main-button" value="default">Guardar</button>
+        <button class="plain-button" value="cancel">Cancelar</button>
+        <button class="primary-button" value="default">Guardar</button>
       </div>
     </form>
-  </dialog>
-
-  <dialog id="subjectDialog" class="dialog wide">
-    <div class="dialog-head">
-      <h3 id="subjectDialogTitle">Asignatura</h3>
-      <button id="closeSubjectDialog" class="close-button" aria-label="Cerrar">×</button>
-    </div>
-    <div id="subjectDialogBody"></div>
   </dialog>
 
   <dialog id="simulationDialog" class="dialog wide">
