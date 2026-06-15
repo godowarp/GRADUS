@@ -1,6 +1,6 @@
-const APP_VERSION = '0.7';
-const STORAGE_KEY = 'gradus.v0.7.state';
-const LEGACY_STORAGE_KEYS = ['gradus.v0.6.state', 'gradus.v0.5.state', 'gradus.v0.4.state', 'gradus.v0.3.state', 'gradus.v0.2.state', 'gradus.v0.1.state'];
+const APP_VERSION = '0.8';
+const STORAGE_KEY = 'gradus.v0.8.state';
+const LEGACY_STORAGE_KEYS = ['gradus.v0.7.state', 'gradus.v0.6.state', 'gradus.v0.5.state', 'gradus.v0.4.state', 'gradus.v0.3.state', 'gradus.v0.2.state', 'gradus.v0.1.state'];
 const MATERIAL_BUCKET = 'gradus-materials';
 
 const SEMESTERS = {
@@ -35,13 +35,13 @@ const COURSE_SUBJECT_TEMPLATES = [
     semester: 'primer_cuatrimestre',
     credits: 6,
     type: 'Obligatoria 4.º',
-    status: 'por_configurar',
-    risk: 'medio',
-    progress: 0,
-    examType: 'Pendiente de analizar con guía y exámenes históricos',
-    evaluation: 'Pendiente de completar con la guía 2026-2027',
-    notes: 'Guía pública disponible. La usuaria indica que cuenta con manual/material de la asignatura o lo incorporará como fuente de estudio.',
-    strategy: 'Primer cuatrimestre. Abrir pronto ficha de evaluación, criterios, instrumentos y patrones de examen.'
+    status: 'revisado',
+    risk: 'alto',
+    progress: 12,
+    examType: 'Mixto: 15 preguntas tipo test + 1 pregunta de desarrollo',
+    evaluation: 'Examen 60% · PEC obligatoria 40% · actividad optativa hasta +1 punto',
+    notes: 'Revisión v0.8: el examen incluye test de 15 ítems, desarrollo de 4 puntos, 120 minutos y sin material. La PEC es obligatoria, debe aprobarse con 5 y se pondera al 40%.',
+    strategy: 'Primer cuatrimestre. Prioridad alta: preparar test histórico, desarrollo de una cara o dos caras según modelo y PEC obligatoria antes del examen.'
   },
   {
     id: 'practicas-v',
@@ -140,13 +140,13 @@ const COURSE_SUBJECT_TEMPLATES = [
     semester: 'segundo_cuatrimestre',
     credits: 6,
     type: 'Formación básica pendiente',
-    status: 'pendiente',
+    status: 'revisado',
     risk: 'alto',
-    progress: 5,
-    examType: 'Pendiente de confirmar con guía 2026-2027 y exámenes históricos',
-    evaluation: 'Pendiente de completar con guía, PEC si procede y sistema de examen',
-    notes: 'Asignatura pendiente de 1.º. Guía y manual de Bases disponibles en el paquete documental.',
-    strategy: 'Prioridad alta por antecedente de suspensión. Programar desde el principio estudio espaciado, recuperación activa y simulacros.'
+    progress: 15,
+    examType: 'Test verdadero/falso: 40 ítems, 120 minutos, sin material',
+    evaluation: 'Examen 2/3 · PEC 1/3 · fórmula P=(A-E)/4 · aprobado sin PEC exige 7,5 en examen',
+    notes: 'Revisión v0.8: guía, manual y exámenes 2026 incorporados como base para simulacros de verdadero/falso. PEC en abril; la PEC no se entrega en septiembre, pero computa si está hecha.',
+    strategy: 'Prioridad alta por antecedente de suspensión. Estudio diario con recuperación activa: bloques breves de verdadero/falso, corrección inmediata y lista de errores por unidad.'
   },
   {
     id: 'metodos',
@@ -155,20 +155,20 @@ const COURSE_SUBJECT_TEMPLATES = [
     semester: 'segundo_cuatrimestre',
     credits: 6,
     type: 'Obligatoria pendiente',
-    status: 'pendiente',
+    status: 'revisado',
     risk: 'alto',
-    progress: 8,
-    examType: 'Mixto: 20 preguntas tipo test + 1 pregunta de desarrollo',
-    evaluation: 'Examen 80% · PEC-2 20% · PEC-1 autoevaluable sin peso',
-    notes: 'Datos iniciales tomados de la guía pública 2026-2027. Exámenes históricos disponibles en el paquete documental.',
-    strategy: 'Prioridad alta por antecedente de suspensión. Trabajar con test, cálculos, errores frecuentes y desarrollo de una página.'
+    progress: 15,
+    examType: 'Mixto: 20 test (12 teoría + 8 práctica) + 1 desarrollo',
+    evaluation: 'Examen 80% · PEC-2 20% · PEC-1 autoevaluable sin peso · errores test restan E/2',
+    notes: 'Revisión v0.8: el test combina 12 ítems teóricos y 8 prácticos, permite formulario y calculadora, y el desarrollo solo se califica si se aprueba la prueba objetiva.',
+    strategy: 'Prioridad alta por antecedente de suspensión. Separar teoría, cálculo práctico y desarrollo de una página; registrar errores de planteamiento y errores de cálculo.'
   }
 ];
 
 const COURSE_MATERIAL_TEMPLATES = [
   { id: 'mat-guia-diseno-curriculo', subjectId: 'diseno-curriculo', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Diseño, Desarrollo e Innovación del Currículum', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de subir como archivo privado o vincular a ficha.' },
   { id: 'mat-manual-curriculum', subjectId: 'diseno-curriculo', semester: 'primer_cuatrimestre', title: 'Ensayos sobre el currículum', kind: 'Manual', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Material disponible en el ZIP aportado. Pendiente de revisión académica.' },
-  { id: 'mat-guia-evaluacion-centros', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Evaluación de Centros y Profesores', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de analizar sistema de evaluación y tipo de examen.' },
+  { id: 'mat-guia-evaluacion-centros', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Evaluación de Centros y Profesores', kind: 'Guía', source: 'Paquete documental aportado', status: 'revisado', notes: 'Sistema de evaluación extraído: examen mixto 60%, PEC obligatoria 40%, actividad optativa +1.' },
   { id: 'mat-guia-practicas-v', subjectId: 'practicas-v', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Prácticas Profesionales V', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de extraer entregas, evidencias y cronograma.' },
   { id: 'mat-guia-politicas', subjectId: 'evaluacion-politicas', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Evaluación de Políticas y Sistemas Educativos', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de análisis de examen y evaluación.' },
   { id: 'mat-guia-economia', subjectId: 'educacion-economia-desarrollo', semester: 'primer_cuatrimestre', title: 'Guía pública 2026-2027 · Educación, Economía y Desarrollo', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de análisis de examen y evaluación.' },
@@ -177,21 +177,129 @@ const COURSE_MATERIAL_TEMPLATES = [
   { id: 'mat-guia-tfg', subjectId: 'tfg', semester: 'segundo_cuatrimestre', title: 'Guía pública 2026-2027 · Trabajo Fin de Grado', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Complementar con normativa, cronograma y líneas.' },
   { id: 'mat-tfg-cronograma', subjectId: 'tfg', semester: 'segundo_cuatrimestre', title: 'Cronograma TFG 2025-2026', kind: 'TFG', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Útil como referencia provisional hasta cronograma 2026-2027.' },
   { id: 'mat-tfg-integridad-ia', subjectId: 'tfg', semester: 'segundo_cuatrimestre', title: 'Guía para asegurar la integridad académica con IA', kind: 'Normativa', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Relevante para declaración de autoría, uso de IA y revisión ética.' },
-  { id: 'mat-guia-bases', subjectId: 'bases', semester: 'segundo_cuatrimestre', title: 'Guía pública 2026-2027 · Bases del Aprendizaje y Educación', kind: 'Guía', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Pendiente de extraer sistema de evaluación y contenidos.' },
-  { id: 'mat-manual-bases', subjectId: 'bases', semester: 'segundo_cuatrimestre', title: 'Manual · Bases del Aprendizaje', kind: 'Manual', source: 'Paquete documental aportado', status: 'pendiente_analisis', notes: 'Manual disponible. Pendiente de índice, bloques y planificación de estudio.' },
-  { id: 'mat-guia-metodos', subjectId: 'metodos', semester: 'segundo_cuatrimestre', title: 'Guía pública 2026-2027 · Métodos y Diseños de Investigación en Educación', kind: 'Guía', source: 'Paquete documental aportado', status: 'revisado', notes: 'Ficha inicial ya creada con la estructura examen 80% + PEC 20%.' }
+  { id: 'mat-guia-bases', subjectId: 'bases', semester: 'segundo_cuatrimestre', title: 'Guía pública 2026-2027 · Bases del Aprendizaje y Educación', kind: 'Guía', source: 'Paquete documental aportado', status: 'revisado', notes: 'Sistema de evaluación extraído: test V/F de 40 ítems, fórmula P=(A-E)/4, examen 2/3 y PEC 1/3.' },
+  { id: 'mat-manual-bases', subjectId: 'bases', semester: 'segundo_cuatrimestre', title: 'Manual · Bases del Aprendizaje', kind: 'Manual', source: 'Paquete documental aportado', status: 'revisado', notes: 'Manual disponible; usado como referencia para validar preguntas de entrenamiento seleccionadas.' },
+  { id: 'mat-guia-metodos', subjectId: 'metodos', semester: 'segundo_cuatrimestre', title: 'Guía pública 2026-2027 · Métodos y Diseños de Investigación en Educación', kind: 'Guía', source: 'Paquete documental aportado', status: 'revisado', notes: 'Ficha revisada: examen mixto 20 test + desarrollo, PEC-2 20% y PEC-1 autoevaluable sin peso.' }
 ];
 
 const COURSE_EXAM_SUMMARIES = [
   { id: 'hist-diseno-curriculo', subjectId: 'diseno-curriculo', semester: 'primer_cuatrimestre', year: '2012-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '48 exámenes detectados para el código 63022037. Pendiente de registrar preguntas, temas y patrones.' },
-  { id: 'hist-evaluacion-centros', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', year: '2012-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '40 exámenes detectados para el código 63024036. Pendiente de análisis.' },
+  { id: 'hist-evaluacion-centros', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', year: '2014-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'revisado_parcial', notes: '40 exámenes detectados para el código 63024036. Modelos 2025 incorporados como simulacros autocorregibles de test + desarrollo.' },
   { id: 'hist-politicas', subjectId: 'evaluacion-politicas', semester: 'primer_cuatrimestre', year: '2014-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '40 exámenes detectados para el código 63024088. Pendiente de análisis.' },
   { id: 'hist-economia', subjectId: 'educacion-economia-desarrollo', semester: 'primer_cuatrimestre', year: '2013-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '44 exámenes detectados para el código 63014167. Pendiente de análisis.' },
   { id: 'hist-programas', subjectId: 'evaluacion-programas', semester: 'segundo_cuatrimestre', year: '2014-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '38 exámenes detectados para el código 63024059. Pendiente de análisis.' },
   { id: 'hist-funcion', subjectId: 'funcion-pedagogica', semester: 'segundo_cuatrimestre', year: '2014-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '38 exámenes detectados para el código 6302402. Pendiente de confirmar código y analizar.' },
   { id: 'hist-tfg', subjectId: 'tfg', semester: 'segundo_cuatrimestre', year: '2025-2026', call: 'Normativa y proceso', type: 'TFG', status: 'pendiente_analisis', notes: 'No es banco de examen: agrupa cronograma, líneas, normativa, declaración de autoría y proceso de valoración.' },
-  { id: 'hist-bases', subjectId: 'bases', semester: 'segundo_cuatrimestre', year: '2012-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '57 exámenes detectados para el código 63901098. Prioridad alta para crear simulacros.' },
-  { id: 'hist-metodos', subjectId: 'metodos', semester: 'segundo_cuatrimestre', year: '2012-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'pendiente_analisis', notes: '46 exámenes detectados para el código 63022095. Prioridad alta para test, cálculos y desarrollo.' }
+  { id: 'hist-bases', subjectId: 'bases', semester: 'segundo_cuatrimestre', year: '2012-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'revisado_parcial', notes: '54 exámenes detectados para el código 63901098. Modelos 2026 incorporados como simulacros autocorregibles V/F.' },
+  { id: 'hist-metodos', subjectId: 'metodos', semester: 'segundo_cuatrimestre', year: '2012-2026', call: 'Paquete histórico recibido', type: 'Histórico', status: 'revisado_parcial', notes: '45 exámenes detectados para el código 63022095. Modelos 2025 y 2026 incorporados como simulacros autocorregibles de teoría + desarrollo guiado.' }
+];
+
+
+const COURSE_QUESTION_TEMPLATES = [
+  { id: 'bases-26j1-q01', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Neurobiología básica', statement: 'El axón constituye el centro metabólico de la neurona.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El centro metabólico de la neurona es el soma o cuerpo celular, no el axón.', sourceLabel: 'E639010980-26J1, ítem 1', isExactHistorical: true, frequency: 1, difficulty: 'baja', notes: 'Pregunta histórica exacta normalizada ortográficamente.' },
+  { id: 'bases-26j1-q02', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Sinapsis', statement: 'En las sinapsis eléctricas, el impulso nervioso pasa directamente a través de uniones comunicantes.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'Las sinapsis eléctricas funcionan mediante uniones comunicantes o gap junctions.', sourceLabel: 'E639010980-26J1, ítem 2', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j1-q03', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Meninges', statement: 'El espacio subaracnoideo se encuentra entre la aracnoides y la duramadre.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El espacio subaracnoideo se sitúa entre aracnoides y piamadre.', sourceLabel: 'E639010980-26J1, ítem 3', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j1-q04', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Sistema nervioso', statement: 'El núcleo rojo forma parte del bulbo raquídeo.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El núcleo rojo se localiza en el mesencéfalo.', sourceLabel: 'E639010980-26J1, ítem 4', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j1-q05', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Diencéfalo', statement: 'El epitálamo controla el sistema endocrino.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El control endocrino se asocia principalmente al hipotálamo.', sourceLabel: 'E639010980-26J1, ítem 5', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j1-q06', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Cerebelo', statement: 'Los dos hemisferios del cerebelo están unidos por el cuerpo calloso.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El cuerpo calloso une los hemisferios cerebrales, no los hemisferios del cerebelo.', sourceLabel: 'E639010980-26J1, ítem 6', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j1-q07', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Emoción', statement: 'La amígdala interviene de manera decisiva en la expresión de las emociones.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'La amígdala tiene un papel central en el procesamiento emocional.', sourceLabel: 'E639010980-26J1, ítem 7', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j1-q08', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Periodos sensibles', statement: 'La adquisición de los aprendizajes fuera de su correspondiente periodo sensible requerirá más tiempo y mayor cantidad de recursos cognitivos.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'Fuera del periodo sensible el aprendizaje suele ser posible, pero menos eficiente.', sourceLabel: 'E639010980-26J1, ítem 8', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j1-q09', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Desarrollo prenatal', statement: 'El estado nutricional de las gestantes constituye un factor clave para garantizar tanto la salud materna como el adecuado crecimiento del feto.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'La nutrición prenatal es un factor de protección para madre y feto.', sourceLabel: 'E639010980-26J1, ítem 9', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j1-q10', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Estrés y aprendizaje', statement: 'La ansiedad y el estrés activan la respuesta neuroendocrina del organismo, incrementándose los niveles de cortisol en el torrente sanguíneo.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'La respuesta de estrés implica activación neuroendocrina y liberación de cortisol.', sourceLabel: 'E639010980-26J1, ítem 10', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j1-q11', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Desarrollo prenatal', statement: 'Las drogas legales e ilegales suelen atravesar fácilmente la membrana placentaria.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'Muchas sustancias de abuso atraviesan la placenta y pueden afectar al desarrollo fetal.', sourceLabel: 'E639010980-26J1, ítem 11', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j1-q12', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Ambientes de aprendizaje', statement: 'La evidencia científica respalda la necesidad de enriquecer de manera artificial los ambientes de aprendizaje.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El principio relevante es evitar ambientes empobrecidos y favorecer experiencias ricas y significativas, no artificializar el aprendizaje.', sourceLabel: 'E639010980-26J1, ítem 12', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j1-q13', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Sueño', statement: 'El sueño paradójico se caracteriza por la presencia de ondas lentas y de gran amplitud en el electroencefalograma.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El sueño paradójico o REM no se caracteriza por ondas lentas de gran amplitud.', sourceLabel: 'E639010980-26J1, ítem 13', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j1-q14', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Ejercicio y cognición', statement: 'El ejercicio físico de tipo aeróbico contribuye a mejorar los procesos de aprendizaje y memoria.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'La actividad aeróbica se asocia a beneficios cognitivos y neuroplásticos.', sourceLabel: 'E639010980-26J1, ítem 14', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j1-q15', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Emoción', statement: 'Las emociones tienen un importante valor adaptativo.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'Las emociones orientan la acción, la atención y la adaptación al entorno.', sourceLabel: 'E639010980-26J1, ítem 15', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j1-q16', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Atención', statement: 'La atención es un constructo unidimensional.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'La atención comprende distintos componentes y redes funcionales.', sourceLabel: 'E639010980-26J1, ítem 16', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j1-q17', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Neurodesarrollo', statement: 'Durante el desarrollo embrionario, la producción neuronal no sigue la misma secuencia temporal en todas las áreas del sistema nervioso.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'La neurogénesis y maduración siguen ritmos diferentes según regiones.', sourceLabel: 'E639010980-26J1, ítem 17', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j1-q18', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Desarrollo prenatal', statement: 'La edad y el nivel educativo de las mujeres embarazadas son variables explicativas del consumo de drogas durante el embarazo.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'La literatura educativa y sanitaria considera edad y nivel educativo como variables asociadas a conductas de riesgo durante la gestación.', sourceLabel: 'E639010980-26J1, ítem 18', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j1-q19', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Mielinización', statement: 'La mielinización de las diferentes regiones del sistema nervioso sigue un patrón temporal ordenado y predecible.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'La mielinización sigue un curso madurativo secuenciado.', sourceLabel: 'E639010980-26J1, ítem 19', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j1-q20', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Periodos sensibles', statement: 'La mayoría de los periodos sensibles de aprendizaje tiene lugar durante la adolescencia.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'Buena parte de los periodos sensibles se sitúan en etapas tempranas del desarrollo.', sourceLabel: 'E639010980-26J1, ítem 20', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+
+  { id: 'bases-26j2-q01', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Neurobiología básica', statement: 'En el cerebro, las células gliales son menos numerosas que las neuronas.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'Las células gliales no son menos numerosas que las neuronas.', sourceLabel: 'E639010980-26J2, ítem 1', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q02', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Sinapsis', statement: 'En las sinapsis eléctricas, las membranas de las neuronas presinápticas y postsinápticas están separadas por la hendidura sináptica.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'La hendidura sináptica es característica de la sinapsis química; en la eléctrica hay acoplamiento por uniones comunicantes.', sourceLabel: 'E639010980-26J2, ítem 2', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j2-q03', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Meninges', statement: 'La duramadre es una membrana protectora de tejido conjuntivo que se encuentra íntimamente adherida al encéfalo.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'La membrana íntimamente adherida al encéfalo es la piamadre.', sourceLabel: 'E639010980-26J2, ítem 3', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j2-q04', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Diencéfalo', statement: 'El hipotálamo forma parte del diencéfalo.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'El hipotálamo es una de las estructuras principales del diencéfalo.', sourceLabel: 'E639010980-26J2, ítem 4', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q05', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Sueño', statement: 'La glándula pineal está implicada en la regulación de los ciclos sueño-vigilia.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'La glándula pineal participa en la secreción de melatonina y en ritmos sueño-vigilia.', sourceLabel: 'E639010980-26J2, ítem 5', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q06', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Sustancia blanca', statement: 'Las fibras de asociación conectan regiones corticales del mismo hemisferio.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'Las fibras de asociación conectan áreas corticales dentro de un mismo hemisferio.', sourceLabel: 'E639010980-26J2, ítem 6', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q07', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Memoria', statement: 'La formación hipocampal está especialmente implicada en los procesos de aprendizaje y de memoria.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'El hipocampo tiene un papel clave en aprendizaje y memoria declarativa.', sourceLabel: 'E639010980-26J2, ítem 7', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q08', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Neurogénesis', statement: 'El periodo más intenso de neurogénesis tiene lugar durante el primer año de vida extrauterina.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'La neurogénesis más intensa se produce durante el desarrollo prenatal.', sourceLabel: 'E639010980-26J2, ítem 8', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j2-q09', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Desarrollo prenatal', statement: 'Las necesidades nutricionales del feto y de la gestante pueden ser satisfechas con una dieta variada y equilibrada.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'Una dieta variada y equilibrada es el principio general de cobertura nutricional durante la gestación.', sourceLabel: 'E639010980-26J2, ítem 9', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q10', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Estrés prenatal', statement: 'El efecto pernicioso del estrés prenatal parece depender del tipo de estrés, el momento de la gestación o el sexo del feto.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'Los efectos del estrés prenatal varían por intensidad, momento, tipo de estrés y características del feto.', sourceLabel: 'E639010980-26J2, ítem 10', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j2-q11', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Desarrollo prenatal', statement: 'El Trastorno del Espectro Alcohólico Fetal se asocia a la exposición postnatal al alcohol.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El TEAF se asocia a exposición prenatal al alcohol.', sourceLabel: 'E639010980-26J2, ítem 11', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q12', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Ambientes de aprendizaje', statement: 'Los resultados de la investigación neurocientífica advierten sobre las consecuencias nefastas de los ambientes empobrecidos en el desarrollo.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'Los ambientes empobrecidos perjudican el desarrollo y el aprendizaje.', sourceLabel: 'E639010980-26J2, ítem 12', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q13', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Sueño', statement: 'Las ondas registradas mediante EEG durante el sueño profundo son de baja amplitud, similares a las que se registran en vigilia.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El sueño profundo se caracteriza por ondas lentas de mayor amplitud.', sourceLabel: 'E639010980-26J2, ítem 13', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j2-q14', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Nutrición y cognición', statement: 'Los ácidos grasos Omega 3 y Omega 6 son los únicos nutrientes necesarios para un buen funcionamiento cognitivo.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El funcionamiento cognitivo requiere un conjunto amplio de nutrientes y condiciones saludables.', sourceLabel: 'E639010980-26J2, ítem 14', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q15', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Emoción y memoria', statement: 'Las emociones ejercen un papel fundamental tanto en los procesos de aprendizaje como en los de memoria.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'La emoción modula atención, codificación, consolidación y recuperación.', sourceLabel: 'E639010980-26J2, ítem 15', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q16', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Emoción', statement: 'Las neuronas espejo podrían ser el mecanismo neural responsable del control emocional.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'Las neuronas espejo se relacionan más con acción, imitación y comprensión social que con el control emocional como tal.', sourceLabel: 'E639010980-26J2, ítem 16', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j2-q17', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Neurodesarrollo', statement: 'La corteza prefrontal es una de las primeras regiones del cerebro en completar su desarrollo.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'La corteza prefrontal completa su maduración de forma tardía.', sourceLabel: 'E639010980-26J2, ítem 19', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q18', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Adolescencia y sueño', statement: 'Adelantar la hora de inicio de las clases durante Educación Secundaria parece mejorar los resultados educativos de los estudiantes.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'La evidencia suele apoyar retrasar, no adelantar, el inicio de las clases en adolescentes.', sourceLabel: 'E639010980-26J2, ítem 22', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'bases-26j2-q19', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Adultez', statement: 'Una vez alcanzada la etapa adulta, el cerebro deja de experimentar cambios estructurales y funcionales.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'B', explanation: 'El cerebro mantiene plasticidad estructural y funcional durante la adultez.', sourceLabel: 'E639010980-26J2, ítem 23', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'bases-26j2-q20', subjectId: 'bases', semester: 'segundo_cuatrimestre', questionType: 'Verdadero/Falso', topic: 'Envejecimiento', statement: 'El entrenamiento cognitivo puede contribuir a contrarrestar el deterioro cognitivo asociado al envejecimiento.', options: ['A. Verdadero', 'B. Falso'], correctAnswer: 'A', explanation: 'El entrenamiento cognitivo puede actuar como factor de estimulación y mantenimiento funcional.', sourceLabel: 'E639010980-26J2, ítem 24', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+
+  { id: 'metodos-26j1-q01', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Método científico', statement: 'El método inductivo trata de:', options: ['A. Extraer conclusiones mediante la observación repetida de hechos concretos.', 'B. Sacar una determinada conclusión partiendo de leyes generales.', 'C. Extraer conclusiones que van de lo general a lo particular.'], correctAnswer: 'A', explanation: 'El razonamiento inductivo avanza desde observaciones particulares hacia conclusiones generales.', sourceLabel: 'E630220950-26J1, ítem 1', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'metodos-26j1-q02', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Ética', statement: 'El código ético de la APA está organizado en secciones. ¿Cuál de estas opciones recoge la relación más completa?', options: ['A. Resolver problemas éticos, competencia, relaciones humanas, privacidad y confidencialidad, publicidad y otras declaraciones públicas, mantenimiento de registros y tarifas, educación y entrenamiento, investigación y publicación, evaluación y terapia.', 'B. Resolver problemas éticos, competencia, relaciones humanas, privacidad y confidencialidad, publicidad y otras declaraciones públicas, mantenimiento de registros y tarifas, educación y entrenamiento, investigación y publicación, evaluación.', 'C. Resolver problemas éticos, competencia, relaciones humanas, privacidad y confidencialidad, publicidad y otras declaraciones públicas, mantenimiento de registros y tarifas, educación y entrenamiento, investigación y publicación y terapia.'], correctAnswer: 'A', explanation: 'La opción A incluye evaluación y terapia, completando la enumeración.', sourceLabel: 'E630220950-26J1, ítem 2', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-26j1-q03', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Informe de investigación', statement: 'Uno de los apartados más importantes de un informe cuantitativo es el análisis crítico, compuesto por:', options: ['A. Implicaciones y recomendaciones, conclusiones, limitaciones y prospectivas.', 'B. Implicaciones y recomendaciones, limitaciones, validez externa y validez interna.', 'C. Tratamiento estadístico, validez externa y validez interna.'], correctAnswer: 'A', explanation: 'El cierre crítico integra implicaciones, conclusiones, limitaciones y líneas prospectivas.', sourceLabel: 'E630220950-26J1, ítem 3', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-26j1-q04', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Cualitativa', statement: '¿Qué criterios se emplean para determinar si conviene usar grupos focales en una investigación cualitativa?', options: ['A. Para investigaciones relacionadas con normas, significados y procesos grupales.', 'B. Para investigaciones relacionadas con normas, significados y trabajos de campo.', 'C. Para investigaciones relacionadas con estudios de caso, significados y trabajos de campo.'], correctAnswer: 'A', explanation: 'Los grupos focales son pertinentes para explorar significados, normas y procesos de interacción grupal.', sourceLabel: 'E630220950-26J1, ítem 4', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-26j1-q05', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Análisis de contenido', statement: 'La definición de Bardin sobre técnicas de análisis de las comunicaciones mediante procedimientos sistemáticos y objetivos hace referencia a:', options: ['A. El análisis de contenido.', 'B. La triangulación.', 'C. Técnicas biográficas.'], correctAnswer: 'A', explanation: 'La formulación corresponde al análisis de contenido.', sourceLabel: 'E630220950-26J1, ítem 5', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'metodos-26j1-q06', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Cambio educativo', statement: '¿Qué autora ha analizado el cambio educativo en torno a mejora escolar, desarrollo de la escuela, innovación educativa y reforma?', options: ['A. Gimeno (2012).', 'B. Sancho Gil (2018).', 'C. Calvo (2017).'], correctAnswer: 'B', explanation: 'La opción histórica del examen vincula esa formulación con Sancho Gil (2018).', sourceLabel: 'E630220950-26J1, ítem 7', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-26j1-q07', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Innovación educativa', statement: 'Según Martínez Sanahuja (2019), una innovación educativa debe ser siempre:', options: ['A. Planificada, evaluable, flexible, integradora, sostenible económicamente.', 'B. Realista y factible, planificada, evaluable, flexible, integradora, sostenible en el tiempo.', 'C. Realista y factible, planificada, evaluable, flexible, integradora, sostenible económicamente.'], correctAnswer: 'B', explanation: 'La sostenibilidad relevante se formula en términos de continuidad en el tiempo.', sourceLabel: 'E630220950-26J1, ítem 8', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-26j1-q08', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Problema de investigación', statement: 'Las normas para que el planteamiento o marco teórico de un informe de investigación esté planteado adecuadamente son:', options: ['A. Enunciarse en forma de afirmación, ser resoluble, formularse operacionalmente y mensurables sus variables, construirse en una situación relevante.', 'B. Enunciarse en forma de pregunta, formularse operacionalmente y mensurables sus hipótesis, construirse en una situación relevante.', 'C. Definirlo en términos de relación entre dos o más variables, enunciarse en forma de pregunta, ser resoluble, construirse en una situación relevante.'], correctAnswer: 'C', explanation: 'La formulación correcta del problema exige relación entre variables, forma de pregunta, resolubilidad y relevancia contextual.', sourceLabel: 'E630220950-26J1, ítem 9', isExactHistorical: true, frequency: 1, difficulty: 'alta' },
+  { id: 'metodos-26j1-q09', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Historias de vida', statement: '¿Cuál de las siguientes opciones pertenece a etapas o fases de las historias de vida?', options: ['A. Recogida previa de información sobre el tema, determinar objetivos, seleccionar informantes, recoger información de los informantes.', 'B. Preparar las técnicas de recogida de información, transcribir la información y elaborar la historia de vida, análisis e interpretación.', 'C. Ambas son correctas.'], correctAnswer: 'C', explanation: 'Ambas opciones recogen fases compatibles dentro del proceso de elaboración de historias de vida.', sourceLabel: 'E630220950-26J1, ítem 10', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-26j1-q10', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Métodos mixtos', statement: 'Según López-Aguado (2018), ¿qué aspectos son especialmente relevantes en el enfoque de los métodos mixtos?', options: ['A. Pluralidad, contextualización y complementariedad de paradigmas.', 'B. Contextualización, sistematicidad y complementariedad de paradigmas.', 'C. Pluralidad, contextualización, sistematicidad y complementariedad de paradigmas.'], correctAnswer: 'C', explanation: 'La opción completa integra pluralidad, contextualización, sistematicidad/validez y complementariedad.', sourceLabel: 'E630220950-26J1, ítem 11', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+
+  { id: 'metodos-25j1-q01', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Conocimiento científico', statement: 'La tipología del conocimiento depende de:', options: ['A. Los objetivos, el objeto y el método utilizado.', 'B. La fuente de la que surge, el objeto que pretende estudiar y el método utilizado.', 'C. La fuente, los objetivos y el procedimiento utilizado.'], correctAnswer: 'B', explanation: 'La clasificación atiende a fuente, objeto y método.', sourceLabel: 'E630220950-25J1, ítem 1', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-25j1-q02', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Modalidades de investigación', statement: 'Si nos centramos en la finalidad, las modalidades de investigación educativa pueden ser:', options: ['A. Básica, aplicada y evaluativa.', 'B. Básica, longitudinal y evaluativa.', 'C. Básica, longitudinal y aplicada.'], correctAnswer: 'A', explanation: 'Según finalidad, la clasificación habitual distingue investigación básica, aplicada y evaluativa.', sourceLabel: 'E630220950-25J1, ítem 2', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'metodos-25j1-q03', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Métodos cuantitativos', statement: '¿Cuál es el objetivo fundamental de los métodos cuantitativos en la investigación empírica?', options: ['A. Que todas las fases del proceso estén bien desarrolladas y justificadas.', 'B. Obtener datos para dar respuesta a problemas educativos identificados por el investigador.', 'C. Determinar la relación entre una variable dependiente y una variable independiente dentro de una población determinada.'], correctAnswer: 'C', explanation: 'La opción más específica recoge el propósito relacional/explicativo propio del enfoque cuantitativo del examen.', sourceLabel: 'E630220950-25J1, ítem 3', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-25j1-q04', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Investigación cualitativa', statement: 'Los objetivos de la investigación cualitativa son:', options: ['A. Describir y explicar las relaciones y comprender las normas o comportamientos de un grupo social.', 'B. Describir y explicar las relaciones y describir las características de una población.', 'C. Analizar experiencias individuales y describir las características de un grupo social.'], correctAnswer: 'A', explanation: 'El foco cualitativo recae en comprensión de significados, normas y comportamientos contextualizados.', sourceLabel: 'E630220950-25J1, ítem 4', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-25j1-q05', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Métodos mixtos', statement: 'La primera revista en publicar artículos con investigaciones mixtas fue:', options: ['A. Journal of Mixed Methods Research.', 'B. Quality and Quantity.', 'C. Field Methods.'], correctAnswer: 'B', explanation: 'El modelo histórico del examen señala Quality and Quantity.', sourceLabel: 'E630220950-25J1, ítem 5', isExactHistorical: true, frequency: 1, difficulty: 'alta' },
+  { id: 'metodos-25j1-q06', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Encuesta', statement: '¿Cuáles son algunos pasos que deben seguirse para realizar una encuesta?', options: ['A. Definir el problema de investigación, la información necesaria y el objeto de estudio.', 'B. Definir los objetivos de la encuesta, decidir la información necesaria y establecer los recursos disponibles.', 'C. Definir el problema de investigación y establecer criterios de selección de ítems.'], correctAnswer: 'B', explanation: 'La preparación de una encuesta exige objetivos, información necesaria y recursos disponibles.', sourceLabel: 'E630220950-25J1, ítem 6', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-25j1-q07', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Redacción científica', statement: 'Para una buena redacción científica se requiere:', options: ['A. Dominar varios idiomas.', 'B. Entender y aplicar los principios fundamentales de la redacción científica.', 'C. Enfocarse en el trabajo y establecer los principios fundamentales de una investigación científica.'], correctAnswer: 'B', explanation: 'La clave evaluada es la aplicación de principios de redacción científica.', sourceLabel: 'E630220950-25J1, ítem 7', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'metodos-25j1-q08', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Innovación', statement: '¿Cuáles son los tres rasgos básicos de la innovación?', options: ['A. Novedad, continuidad y resultado práctico.', 'B. Bondad, aceptación del cambio e integración.', 'C. Novedad, aceptación del cambio y resultado práctico.'], correctAnswer: 'C', explanation: 'Los rasgos básicos evaluados son novedad, aceptación del cambio y resultado práctico.', sourceLabel: 'E630220950-25J1, ítem 8', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'metodos-25j1-q09', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Paradigmas', statement: 'Los paradigmas de investigación son positivista, naturalista y...', options: ['A. Natural.', 'B. Sociocrítico.', 'C. Interpretativo.'], correctAnswer: 'B', explanation: 'La tríada habitual es positivista, naturalista/interpretativo y sociocrítico.', sourceLabel: 'E630220950-25J1, ítem 10', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'metodos-25j1-q10', subjectId: 'metodos', semester: 'segundo_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Cuestionario', statement: 'Una ventaja importante del cuestionario es:', options: ['A. Procedimiento relativamente barato y fácil de aplicar, naturaleza impersonal, garantía de anonimato y gran alcance.', 'B. Procedimiento barato y fácil que recoge información estandarizada y facilita el análisis cuantitativo.', 'C. Procedimiento barato y fácil que recoge información estandarizada.'], correctAnswer: 'A', explanation: 'La opción A recoge el conjunto más completo de ventajas enumeradas.', sourceLabel: 'E630220950-25J1, ítem 11', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+
+  { id: 'centros-a25f1-q01', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Democratización de la evaluación', statement: '¿Qué afirmación define mejor la democratización de la evaluación?', options: ['A. Evaluación que trata por igual a todos los sujetos y objetos evaluados.', 'B. Evaluación cuyos resultados se comunican de forma transparente a la opinión pública.', 'C. Evaluación no solo al servicio de patrocinadores y que considera necesidades, visión y valores de grupos e instituciones implicadas.'], correctAnswer: 'C', explanation: 'La democratización implica considerar a los grupos concernidos, no solo a quienes patrocinan la evaluación.', sourceLabel: 'E630240360A25F1, ítem 1', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-a25f1-q02', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Evaluación docente', statement: 'La gran disyuntiva al plantear un sistema de evaluación del desempeño docente es:', options: ['A. Méritos académicos y formación inicial frente a comportamiento docente en aula.', 'B. Participación voluntaria u obligatoria del profesorado.', 'C. Orientación de control sobre el profesorado u orientación de desarrollo profesional docente.'], correctAnswer: 'C', explanation: 'El eje de fondo es control/rendición de cuentas frente a desarrollo profesional.', sourceLabel: 'E630240360A25F1, ítem 2', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-a25f1-q03', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Accountability', statement: '¿Qué es en esencia la accountability?', options: ['A. Asunción de responsabilidades profesionales ante quienes reciben, financian y proveen el servicio.', 'B. Imposición administrativa para justificar decisiones presupuestarias.', 'C. Modalidad de autoevaluación institucional de centros educativos.'], correctAnswer: 'A', explanation: 'Accountability remite a responsabilidad, rendición de cuentas y obligación de responder ante la comunidad.', sourceLabel: 'E630240360A25F1, ítem 3', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-a25f1-q04', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Mejora escolar', statement: '¿Qué enfoque se sugiere para trabajar con las escuelas en lugar de estrategias prescriptivas?', options: ['A. Estrategias competitivas.', 'B. Modos horizontales de trabajo.', 'C. Estrategias de control.'], correctAnswer: 'B', explanation: 'La mejora escolar requiere cooperación y horizontalidad, no prescripción vertical.', sourceLabel: 'E630240360A25F1, ítem 4', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-a25f1-q05', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Evaluación externa', statement: '¿Qué se considera una precondición para responder mejor a las evaluaciones externas?', options: ['A. Procesos internos de rendición de cuentas.', 'B. Aumentar la burocracia.', 'C. Reducir la autonomía escolar.'], correctAnswer: 'A', explanation: 'Los procesos internos preparan al centro para interpretar y utilizar evaluaciones externas.', sourceLabel: 'E630240360A25F1, ítem 5', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-a25f1-q06', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Validez', statement: '¿Qué se entiende por validez interna en el proceso de evaluación de la docencia?', options: ['A. Capacidad de generalizar a otros contextos.', 'B. Consistencia de los diferentes elementos que componen el proceso de evaluación.', 'C. Utilidad de la evaluación para los estudiantes.'], correctAnswer: 'B', explanation: 'La validez interna se relaciona con coherencia y consistencia del proceso evaluativo.', sourceLabel: 'E630240360A25F1, ítem 6', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-a25f1-q07', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Calidad docente', statement: '¿Qué se debe considerar al definir el perfil de calidad docente?', options: ['A. Cantidad de años de experiencia.', 'B. Competencias, habilidades y actitudes del profesorado.', 'C. Número de publicaciones del docente.'], correctAnswer: 'B', explanation: 'Un perfil de calidad docente integra competencias, habilidades y actitudes profesionales.', sourceLabel: 'E630240360A25F1, ítem 7', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-a25f1-q08', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Equidad', statement: '¿Qué concepto es fundamental para garantizar la igualdad de oportunidades en la educación?', options: ['A. Competitividad.', 'B. Equidad.', 'C. Exclusividad.'], correctAnswer: 'B', explanation: 'La equidad es condición de igualdad real de oportunidades.', sourceLabel: 'E630240360A25F1, ítem 8', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-a25f1-q09', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Indicadores', statement: '¿Qué se considera un indicador de resultados en el sistema educativo?', options: ['A. Número de ordenadores en las escuelas.', 'B. Tasa de abandono escolar.', 'C. Ratio profesor/alumno.'], correctAnswer: 'B', explanation: 'La tasa de abandono escolar es un indicador de resultado, no de recurso o contexto.', sourceLabel: 'E630240360A25F1, ítem 9', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-a25f1-q10', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Tipos de evaluación', statement: '¿Qué tipo de evaluación se realiza una vez concluido el programa o acción?', options: ['A. Evaluación formativa.', 'B. Evaluación diagnóstica.', 'C. Evaluación sumativa.'], correctAnswer: 'C', explanation: 'La evaluación sumativa se realiza al final para valorar resultados.', sourceLabel: 'E630240360A25F1, ítem 10', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-a25f1-q11', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Evaluación docente', statement: '¿Por qué es importante evaluar al profesorado en ejercicio?', options: ['A. Porque la sociedad debe saber cómo se realiza la equidad educativa.', 'B. Porque la falta de un sistema riguroso hurta a la opinión pública su derecho a saber qué pasa dentro de las aulas.', 'C. Porque de ello dependen los incentivos del profesorado.'], correctAnswer: 'B', explanation: 'El examen vincula la evaluación docente con transparencia pública sobre lo que ocurre en las aulas.', sourceLabel: 'E630240360A25F1, ítem 11', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-a25f1-q12', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Escuelas eficaces', statement: 'La diferencia fundamental entre Escuelas Eficaces y Mejora de la Escuela es que...', options: ['A. El primer movimiento usa los resultados de aprendizaje como criterio exclusivo de éxito y el segundo se centra más en procesos.', 'B. El primero ignora las condiciones de los centros que posibilitan el éxito y el segundo se centra en identificarlas.', 'C. El primero está impulsado desde administraciones y el segundo nace exclusivamente de las bases.'], correctAnswer: 'A', explanation: 'La distinción clásica contrapone énfasis en resultados frente a procesos de mejora.', sourceLabel: 'E630240360A25F1, ítem 12', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-a25f1-q13', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Desempeño docente', statement: 'La evaluación del desempeño docente se fundamenta en:', options: ['A. Dominio de saberes y dominio de conductas, junto a sus propuestas resultantes.', 'B. La práctica que el docente desempeña en el aula.', 'C. La formación específica que consigue antes y después de su práctica.'], correctAnswer: 'A', explanation: 'El modelo del examen destaca saberes, conductas y propuestas resultantes.', sourceLabel: 'E630240360A25F1, ítem 13', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-a25f1-q14', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Educación superior', statement: 'En evaluación de la educación superior europea, ¿cuáles son procedimientos habituales?', options: ['A. Creación de agencias nacionales de evaluación y acreditación.', 'B. Creación de unidades internas combinadas con agencias europeas.', 'C. Autoinforme de la institución, visita de expertos externos e informe final.'], correctAnswer: 'C', explanation: 'El procedimiento típico combina autoinforme, visita externa e informe final.', sourceLabel: 'E630240360A25F1, ítem 14', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-a25f1-q15', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'ANECA', statement: '¿Qué es la ANECA?', options: ['A. Agencia Europea para la evaluación de la calidad universitaria.', 'B. Agencia Española para evaluación de centros educativos y acreditación de currículos escolares.', 'C. Agencia Española para evaluación de la calidad y acreditación en las universidades.'], correctAnswer: 'C', explanation: 'ANECA es la Agencia Nacional de Evaluación de la Calidad y Acreditación universitaria.', sourceLabel: 'E630240360A25F1, ítem 15', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+
+  { id: 'centros-b25f2-q01', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Democratización de la evaluación', statement: '¿Qué afirmación define mejor la democratización de la evaluación?', options: ['A. Evaluación cuyo propósito es impartir justicia.', 'B. Evaluación no solo al servicio de patrocinadores y que considera necesidades, visión y valores de grupos e instituciones implicadas.', 'C. Evaluación que trata por igual a todos con instrumentos y criterios comunes.'], correctAnswer: 'B', explanation: 'La democratización incorpora a los colectivos concernidos por la evaluación.', sourceLabel: 'E630240360B25F2, ítem 1', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-b25f2-q02', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Indicadores educativos', statement: '¿Cuál es el mejor ejemplo de indicador educativo útil para decisiones en un centro y en un país?', options: ['A. Tasa de abandono escolar temprano.', 'B. Periódicos vendidos por habitante y año.', 'C. Renta per cápita.'], correctAnswer: 'A', explanation: 'La tasa de abandono escolar temprano es un indicador educativo de gran valor decisional.', sourceLabel: 'E630240360B25F2, ítem 2', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-b25f2-q03', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Mejora escolar', statement: '¿Qué componente clave para una mejora escolar exitosa señalan Sleegers y Leithwood?', options: ['A. Evaluación externa.', 'B. Aprendizaje docente en el contexto de trabajo.', 'C. Memorización de contenidos.'], correctAnswer: 'B', explanation: 'La mejora escolar se vincula al aprendizaje profesional situado del profesorado.', sourceLabel: 'E630240360B25F2, ítem 3', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-b25f2-q04', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Comunidad profesional', statement: '¿Qué modelo educativo se menciona como el más coherente y actual?', options: ['A. Escuela tradicional.', 'B. Escuela competitiva.', 'C. Escuela como Comunidad de Aprendizaje Profesional.'], correctAnswer: 'C', explanation: 'El modelo de comunidad profesional de aprendizaje es el enfoque más coherente con mejora y aprendizaje institucional.', sourceLabel: 'E630240360B25F2, ítem 4', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-b25f2-q05', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Validez de constructo', statement: '¿A qué se refiere la validez de constructo en evaluación de la docencia?', options: ['A. Capacidad para predecir rendimiento futuro.', 'B. Grado en que los indicadores responden al planteamiento teórico que guía la definición de calidad.', 'C. Facilidad de uso de los instrumentos.'], correctAnswer: 'B', explanation: 'La validez de constructo exige coherencia entre indicadores y constructo teórico evaluado.', sourceLabel: 'E630240360B25F2, ítem 5', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-b25f2-q06', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Validez', statement: '¿Qué estrategia ayuda a asegurar la validez durante el proceso de evaluación?', options: ['A. Cuidar la flexibilidad de la planificación.', 'B. Utilizar únicamente métodos cuantitativos.', 'C. Evitar la participación de estudiantes.'], correctAnswer: 'A', explanation: 'Una planificación flexible ayuda a adaptar el proceso y sostener su validez contextual.', sourceLabel: 'E630240360B25F2, ítem 6', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-b25f2-q07', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Calidad', statement: '¿Qué tipo de calidad se centra en satisfacer necesidades y expectativas razonables de los clientes?', options: ['A. Calidad como fenómeno excepcional.', 'B. Calidad como perfección o mérito.', 'C. Calidad como adecuación a propósitos.'], correctAnswer: 'C', explanation: 'La calidad como adecuación a propósitos atiende a necesidades, expectativas y finalidad del servicio.', sourceLabel: 'E630240360B25F2, ítem 7', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-b25f2-q08', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Equidad', statement: '¿Qué ámbito de análisis de la equidad educativa se refiere a inserción productiva y desarrollo social y cultural del alumnado?', options: ['A. Pre-sistema.', 'B. Intra-sistema.', 'C. Post-sistema.'], correctAnswer: 'C', explanation: 'El post-sistema mira los resultados posteriores y la inserción social, productiva y cultural.', sourceLabel: 'E630240360B25F2, ítem 8', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-b25f2-q09', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Mejora de la escuela', statement: '¿Qué enfoque considera la escuela como comunidad de aprendizaje y organización capaz de aprender?', options: ['A. Rendición de cuentas.', 'B. Mejora de la escuela.', 'C. Evaluación sumativa.'], correctAnswer: 'B', explanation: 'El enfoque de mejora de la escuela concibe los centros como organizaciones que aprenden.', sourceLabel: 'E630240360B25F2, ítem 9', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-b25f2-q10', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Evaluación respondente', statement: '¿Qué autor planteó que los estudios de evaluación deben responder a las demandas de la comunidad?', options: ['A. Michael Fullan.', 'B. Robert Stake.', 'C. Helen Simons.'], correctAnswer: 'B', explanation: 'Robert Stake se asocia con la evaluación respondente.', sourceLabel: 'E630240360B25F2, ítem 10', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-b25f2-q11', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Autoevaluación', statement: 'La autoevaluación de un centro surge:', options: ['A. A iniciativa de la Administración educativa, como control.', 'B. A iniciativa de planteamientos estatutarios del centro, como medida instaurada.', 'C. A iniciativa del propio centro y de sus integrantes, para conocer logros y deficiencias.'], correctAnswer: 'C', explanation: 'La autoevaluación institucional nace del propio centro para conocerse y mejorar.', sourceLabel: 'E630240360B25F2, ítem 11', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-b25f2-q12', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Autoevaluación institucional', statement: 'La autoevaluación institucional de centros educativos...', options: ['A. Tiene sentido como contraste de una evaluación externa y como proceso interno centrado en prioridades de la escuela.', 'B. Tiene sentido solo como contraste de evaluación externa.', 'C. Tiene sentido solo como proceso interno orientado a la mejora.'], correctAnswer: 'A', explanation: 'Puede servir tanto para contrastar evaluación externa como para orientar procesos internos de mejora.', sourceLabel: 'E630240360B25F2, ítem 12', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-b25f2-q13', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Indicadores', statement: 'Un indicador educativo debe:', options: ['A. Medir hechos y cuestiones perdurables del sistema.', 'B. Recogerse siempre en tablas de doble entrada.', 'C. Tener datos interpretables de forma distinta según el perfil de quien analiza.'], correctAnswer: 'A', explanation: 'Un buen indicador mide aspectos relevantes y sostenidos del sistema.', sourceLabel: 'E630240360B25F2, ítem 13', isExactHistorical: true, frequency: 1, difficulty: 'media' },
+  { id: 'centros-b25f2-q14', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'ANECA', statement: '¿Qué es la ANECA?', options: ['A. Agencia Europea para la evaluación de la calidad universitaria.', 'B. Agencia Española para evaluación de centros educativos y acreditación de nuevos currículos escolares.', 'C. Agencia Española para evaluación de la calidad y acreditación en las universidades.'], correctAnswer: 'C', explanation: 'ANECA es la agencia española de calidad y acreditación universitaria.', sourceLabel: 'E630240360B25F2, ítem 14', isExactHistorical: true, frequency: 1, difficulty: 'baja' },
+  { id: 'centros-b25f2-q15', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', questionType: 'Test 3 opciones', topic: 'Evaluación centrada en la escuela', statement: '¿Qué principio debe cumplir la evaluación centrada en la escuela?', options: ['A. El alumnado y sus resultados no deberían ser el único objeto de evaluación escolar.', 'B. Solo debe llevarse a cabo por profesores sin agentes externos.', 'C. Profesorado y actuaciones didácticas deberían ser el único objeto de evaluación.'], correctAnswer: 'A', explanation: 'La evaluación centrada en la escuela debe ser amplia y no reducirse a resultados del alumnado.', sourceLabel: 'E630240360B25F2, ítem 15', isExactHistorical: true, frequency: 1, difficulty: 'baja' }
+];
+
+const SIMULATION_BLUEPRINTS = [
+  { id: 'sim-bases-26j1', subjectId: 'bases', semester: 'segundo_cuatrimestre', title: 'Bases · Simulacro V/F 2026 modelo 1', source: 'E639010980-26J1', examMode: 'Entrenamiento histórico autocorregible', durationMinutes: 60, scoring: 'bases_tf', description: '20 ítems verdadero/falso seleccionados del modelo 1 de junio 2026. La nota se escala sobre 10 con la fórmula oficial adaptada: aciertos menos errores.', questionIds: ['bases-26j1-q01','bases-26j1-q02','bases-26j1-q03','bases-26j1-q04','bases-26j1-q05','bases-26j1-q06','bases-26j1-q07','bases-26j1-q08','bases-26j1-q09','bases-26j1-q10','bases-26j1-q11','bases-26j1-q12','bases-26j1-q13','bases-26j1-q14','bases-26j1-q15','bases-26j1-q16','bases-26j1-q17','bases-26j1-q18','bases-26j1-q19','bases-26j1-q20'] },
+  { id: 'sim-bases-26j2', subjectId: 'bases', semester: 'segundo_cuatrimestre', title: 'Bases · Simulacro V/F 2026 modelo 2', source: 'E639010980-26J2', examMode: 'Entrenamiento histórico autocorregible', durationMinutes: 60, scoring: 'bases_tf', description: '20 ítems verdadero/falso del modelo 2 de junio 2026. Sirve para recuperación activa rápida y lista de errores.', questionIds: ['bases-26j2-q01','bases-26j2-q02','bases-26j2-q03','bases-26j2-q04','bases-26j2-q05','bases-26j2-q06','bases-26j2-q07','bases-26j2-q08','bases-26j2-q09','bases-26j2-q10','bases-26j2-q11','bases-26j2-q12','bases-26j2-q13','bases-26j2-q14','bases-26j2-q15','bases-26j2-q16','bases-26j2-q17','bases-26j2-q18','bases-26j2-q19','bases-26j2-q20'] },
+  { id: 'sim-metodos-26j1', subjectId: 'metodos', semester: 'segundo_cuatrimestre', title: 'Métodos · Teoría 2026 + desarrollo', source: 'E630220950-26J1', examMode: 'Mixto parcial autocorregible', durationMinutes: 45, scoring: 'metodos_objective', developmentMax: 2, developmentPrompt: 'Desarrollo histórico: La etnografía. Redacta una respuesta de una página con definición, finalidad, rasgos, proceso y utilidad educativa.', description: 'Bloque teórico autocorregible de 10 ítems + desarrollo guiado. Los cálculos prácticos se incorporarán después de verificar plantillas.', questionIds: ['metodos-26j1-q01','metodos-26j1-q02','metodos-26j1-q03','metodos-26j1-q04','metodos-26j1-q05','metodos-26j1-q06','metodos-26j1-q07','metodos-26j1-q08','metodos-26j1-q09','metodos-26j1-q10'] },
+  { id: 'sim-metodos-25j1', subjectId: 'metodos', semester: 'segundo_cuatrimestre', title: 'Métodos · Teoría 2025 + desarrollo', source: 'E630220950-25J1', examMode: 'Mixto parcial autocorregible', durationMinutes: 45, scoring: 'metodos_objective', developmentMax: 2, developmentPrompt: 'Desarrollo guiado: plantea un informe breve sobre métodos mixtos, indicando finalidad, integración de enfoques y utilidad en investigación educativa.', description: 'Bloque teórico autocorregible de 10 ítems + desarrollo guiado. Replica el estilo de la primera parte del examen.', questionIds: ['metodos-25j1-q01','metodos-25j1-q02','metodos-25j1-q03','metodos-25j1-q04','metodos-25j1-q05','metodos-25j1-q06','metodos-25j1-q07','metodos-25j1-q08','metodos-25j1-q09','metodos-25j1-q10'] },
+  { id: 'sim-centros-a25f1', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', title: 'Evaluación de Centros · Modelo A 2025', source: 'E630240360A25F1', examMode: 'Mixto autocorregible', durationMinutes: 75, scoring: 'centros_mixed', developmentMax: 4, developmentPrompt: 'Pregunta de desarrollo histórica: Modalidades de evaluación en un centro educativo como objeto de evaluación.', description: '15 ítems tipo test con penalización oficial y desarrollo guiado de 4 puntos.', questionIds: ['centros-a25f1-q01','centros-a25f1-q02','centros-a25f1-q03','centros-a25f1-q04','centros-a25f1-q05','centros-a25f1-q06','centros-a25f1-q07','centros-a25f1-q08','centros-a25f1-q09','centros-a25f1-q10','centros-a25f1-q11','centros-a25f1-q12','centros-a25f1-q13','centros-a25f1-q14','centros-a25f1-q15'] },
+  { id: 'sim-centros-b25f2', subjectId: 'evaluacion-centros', semester: 'primer_cuatrimestre', title: 'Evaluación de Centros · Modelo B 2025', source: 'E630240360B25F2', examMode: 'Mixto autocorregible', durationMinutes: 75, scoring: 'centros_mixed', developmentMax: 4, developmentPrompt: 'Pregunta de desarrollo histórica: claves de los aspectos organizativos de un proceso de autoevaluación.', description: '15 ítems tipo test con penalización oficial y desarrollo guiado de 4 puntos.', questionIds: ['centros-b25f2-q01','centros-b25f2-q02','centros-b25f2-q03','centros-b25f2-q04','centros-b25f2-q05','centros-b25f2-q06','centros-b25f2-q07','centros-b25f2-q08','centros-b25f2-q09','centros-b25f2-q10','centros-b25f2-q11','centros-b25f2-q12','centros-b25f2-q13','centros-b25f2-q14','centros-b25f2-q15'] }
 ];
 
 const OBSOLETE_INITIAL_SUBJECT_IDS = new Set(['direccion', 'orientacion-profesional', 'optativa-1', 'optativa-2']);
@@ -267,7 +375,7 @@ const DEFAULT_STATE = {
   ],  materials: COURSE_MATERIAL_TEMPLATES.map(material => ({ ...material })),
   exams: COURSE_EXAM_SUMMARIES.map(exam => ({ ...exam })),
   attempts: [],
-  questions: [],
+  questions: COURSE_QUESTION_TEMPLATES.map(question => ({ ...question })),
   gradeRules: {}
 };
 
@@ -397,6 +505,11 @@ function reconcileAcademicTemplates(stateToReconcile) {
   stateToReconcile.exams = mergeById(stateToReconcile.exams || [], COURSE_EXAM_SUMMARIES).map(exam => ({
     ...exam,
     semester: itemSemester(exam)
+  }));
+  stateToReconcile.questions = mergeById(stateToReconcile.questions || [], COURSE_QUESTION_TEMPLATES).map(question => ({
+    ...question,
+    semester: itemSemester(question),
+    frequency: Number(question.frequency || 1)
   }));
   return stateToReconcile;
 }
@@ -922,6 +1035,7 @@ async function loadFromSupabase() {
       questions: questionsResult.data.map(questionFromRow)
     });
     saveLocalState();
+    scheduleSupabaseSync();
     setSyncStatus('Sincronizado con Supabase', 'online');
   } catch (error) {
     console.error('Error al cargar desde Supabase:', error);
@@ -1925,7 +2039,7 @@ function renderQuestionList(questions) {
       <div>
         <strong>${escapeHtml(subjectName(question.subjectId))} · ${escapeHtml(question.topic || 'Sin tema')}</strong>
         <p>${escapeHtml(question.statement)}</p>
-        ${question.options?.length ? `<ol class="options-list">${question.options.map(option => `<li>${escapeHtml(option)}</li>`).join('')}</ol>` : ''}
+        ${question.options?.length ? `<ol class="options-list">${question.options.map(option => `<li>${escapeHtml(typeof option === 'string' ? option : `${option.id}. ${option.text}`)}</li>`).join('')}</ol>` : ''}
         ${question.correctAnswer ? `<p><strong>Respuesta:</strong> ${escapeHtml(question.correctAnswer)}</p>` : ''}
         ${question.explanation ? `<p>${escapeHtml(question.explanation)}</p>` : ''}
         <div class="inline-actions"><button class="tiny-button danger-text" data-delete-collection="questions" data-delete-id="${escapeHtml(question.id)}">Eliminar pregunta</button></div>
@@ -1943,57 +2057,284 @@ function renderQuestionList(questions) {
 function renderSimulations() {
   const subjects = filteredSubjects();
   const attempts = filteredAttempts();
+  const simulations = availableSimulations();
+  const active = simulationById(state.ui?.activeSimulationId);
   $('#simulacros').innerHTML = `
     <div class="grid-12">
-      <article class="card col-8">
-        <h3>Simulador inicial · ${semesterLabel(activeSemesterFilter())}</h3>
-        <p style="color:var(--muted);margin-top:0">Los simulacros automáticos se activarán cuando cada asignatura tenga preguntas históricas suficientes. De momento, GRADUS ya calcula si el banco permite preparar un simulacro fiable.</p>
-        <div class="notice">
-          <strong>Regla de rigor</strong>
-          GRADUS no inventará preguntas oficiales. Cada simulacro deberá indicar si procede de pregunta histórica exacta, variante histórica o patrón documentado.
+      <article class="hero-panel col-12 simulation-hero">
+        <div>
+          <p class="eyebrow">Simulacros verificados</p>
+          <h3>Entrenamiento autocorregible basado en exámenes reales</h3>
+          <p>Bases, Métodos y Evaluación de Centros ya tienen modelos interactivos. Primero se corrige la parte objetiva; los desarrollos se trabajan con autoevaluación guiada cuando el examen real incluye pregunta abierta.</p>
         </div>
-        <div class="subject-grid" style="margin-top:16px">
-          ${subjects.length ? subjects.map(subject => {
-            const questionCount = state.questions.filter(question => question.subjectId === subject.id).length;
-            const ready = questionCount >= 10;
-            return `
-            <article class="card compact">
-              <h4>${escapeHtml(subject.name)}</h4>
-              <p>${escapeHtml(subject.examType || 'Pendiente de configurar')}</p>
-              <p>${escapeHtml(subject.evaluation || '')}</p>
-              <div class="subject-meta">
-                ${semesterBadge(subject.semester)}
-                <span class="badge ${ready ? 'success' : 'warning'}">${questionCount} preguntas</span>
-              </div>
-              <p class="subtle-note">${ready ? 'Banco suficiente para empezar a construir simulacros guiados.' : 'Conviene cargar más preguntas históricas antes de generar simulacros.'}</p>
-              <button class="primary-action mock-attempt-btn" data-subject-id="${escapeHtml(subject.id)}" style="margin-top:12px">Registrar simulacro manual</button>
-            </article>`;
-          }).join('') : renderEmptyState()}
+        <div class="hero-actions">
+          <span class="badge success">${simulations.length} simulacros disponibles</span>
+          <span class="badge primary">${state.questions.length} preguntas verificadas</span>
         </div>
       </article>
+
+      <article class="card col-8">
+        <div class="section-heading">
+          <div>
+            <h3>Simulacros disponibles · ${semesterLabel(activeSemesterFilter())}</h3>
+            <p>Selecciona uno y responde sin salir de GRADUS. Cada intento queda registrado.</p>
+          </div>
+        </div>
+        <div class="simulation-grid">
+          ${simulations.length ? simulations.map(renderSimulationCard).join('') : renderEmptyState()}
+        </div>
+      </article>
+
       <article class="card col-4">
         <h3>Intentos registrados</h3>
         ${renderAttempts(attempts)}
       </article>
+
+      <article class="card col-12 simulation-stage" id="simulationStage">
+        ${active ? renderActiveSimulation(active) : renderSimulationWelcome(subjects)}
+      </article>
     </div>
   `;
-  $$('.mock-attempt-btn').forEach(button => {
+  attachSimulationEvents();
+}
+
+function availableSimulations() {
+  return SIMULATION_BLUEPRINTS.filter(simulation => matchesSemester({ semester: simulation.semester, subjectId: simulation.subjectId }));
+}
+
+function simulationById(id) {
+  return SIMULATION_BLUEPRINTS.find(simulation => simulation.id === id) || null;
+}
+
+function questionsForSimulation(simulation) {
+  return simulation.questionIds.map(id => state.questions.find(question => question.id === id) || COURSE_QUESTION_TEMPLATES.find(question => question.id === id)).filter(Boolean);
+}
+
+function renderSimulationCard(simulation) {
+  const questions = questionsForSimulation(simulation);
+  return `
+    <article class="simulation-card">
+      <div class="simulation-card-top">
+        <span class="badge primary">${escapeHtml(subjectName(simulation.subjectId))}</span>
+        <span class="badge neutral">${escapeHtml(simulation.source)}</span>
+      </div>
+      <h4>${escapeHtml(simulation.title)}</h4>
+      <p>${escapeHtml(simulation.description)}</p>
+      <div class="simulation-meta">
+        <span>${questions.length} ítems</span>
+        <span>${simulation.durationMinutes} min</span>
+        <span>${escapeHtml(simulation.examMode)}</span>
+      </div>
+      <button class="primary-action start-simulation-btn" data-simulation-id="${escapeHtml(simulation.id)}">Iniciar</button>
+    </article>
+  `;
+}
+
+function renderSimulationWelcome(subjects) {
+  const readySubjects = subjects.filter(subject => SIMULATION_BLUEPRINTS.some(sim => sim.subjectId === subject.id));
+  return `
+    <div class="simulation-welcome">
+      <div class="focus-orb" aria-hidden="true">◎</div>
+      <div>
+        <h3>Elige un simulacro para empezar</h3>
+        <p>Recomendación TDAH: haz un bloque corto, corrige al momento y revisa solo los errores. No abras manuales durante el intento.</p>
+        <div class="rule-grid compact-rules">
+          <div class="rule-card"><strong>Bases</strong><p>Verdadero/falso con penalización por error.</p></div>
+          <div class="rule-card"><strong>Métodos</strong><p>Test teórico autocorregible y desarrollo guiado.</p></div>
+          <div class="rule-card"><strong>Centros</strong><p>Test penalizado + desarrollo de 4 puntos.</p></div>
+        </div>
+        <p class="subtle-note">Asignaturas con simulacros listos en esta vista: ${readySubjects.map(subject => escapeHtml(subject.name)).join(' · ') || 'ninguna'}.</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderActiveSimulation(simulation) {
+  const questions = questionsForSimulation(simulation);
+  return `
+    <form id="activeSimulationForm" class="simulation-form" data-simulation-id="${escapeHtml(simulation.id)}">
+      <div class="simulation-active-header">
+        <div>
+          <p class="eyebrow">${escapeHtml(subjectName(simulation.subjectId))}</p>
+          <h3>${escapeHtml(simulation.title)}</h3>
+          <p>${escapeHtml(simulation.description)}</p>
+        </div>
+        <div class="timer-chip" data-duration="${escapeHtml(simulation.durationMinutes)}">${escapeHtml(simulation.durationMinutes)} min</div>
+      </div>
+      <div class="notice">
+        <strong>Modo examen</strong>
+        Responde sin consultar materiales. Puedes dejar preguntas en blanco; GRADUS aplicará la penalización correspondiente al modelo.
+      </div>
+      <div class="simulation-questions">
+        ${questions.map((question, index) => renderSimulationQuestion(question, index)).join('')}
+      </div>
+      ${simulation.developmentPrompt ? `
+        <div class="development-box">
+          <h4>Pregunta de desarrollo</h4>
+          <p>${escapeHtml(simulation.developmentPrompt)}</p>
+          <textarea name="developmentText" rows="6" placeholder="Escribe aquí un esquema o respuesta breve. GRADUS no inventa una corrección cerrada para desarrollos, pero registra tu autoevaluación."></textarea>
+          <label>Autoevaluación del desarrollo, máximo ${escapeHtml(simulation.developmentMax)} puntos
+            <input name="developmentScore" type="number" min="0" max="${escapeHtml(simulation.developmentMax)}" step="0.25" value="0">
+          </label>
+          <p class="subtle-note">Criterio: pertinencia, precisión conceptual, estructura, aplicación práctica y expresión académica.</p>
+        </div>` : ''}
+      <div id="simulationResult" class="simulation-result" aria-live="polite"></div>
+      <div class="modal-actions sticky-actions">
+        <button type="button" class="secondary-button cancel-simulation-btn">Cerrar simulacro</button>
+        <button type="submit" class="primary-action">Corregir y guardar intento</button>
+      </div>
+    </form>
+  `;
+}
+
+function renderSimulationQuestion(question, index) {
+  const options = (question.options || []).map(option => parseOption(option));
+  return `
+    <fieldset class="simulation-question">
+      <legend><span>${index + 1}</span>${escapeHtml(question.statement)}</legend>
+      <div class="simulation-options">
+        ${options.map(option => `
+          <label class="option-pill">
+            <input type="radio" name="q-${escapeHtml(question.id)}" value="${escapeHtml(option.id)}">
+            <span><strong>${escapeHtml(option.id)}</strong> ${escapeHtml(option.text)}</span>
+          </label>
+        `).join('')}
+      </div>
+      <small>${escapeHtml(question.topic || 'Sin tema')} · ${escapeHtml(question.sourceLabel || '')}</small>
+    </fieldset>
+  `;
+}
+
+function parseOption(option) {
+  if (typeof option !== 'string') return { id: String(option.id || ''), text: String(option.text || '') };
+  const match = option.match(/^([A-Z])\.\s*(.*)$/);
+  if (match) return { id: match[1], text: match[2] };
+  return { id: option.slice(0, 1), text: option };
+}
+
+function attachSimulationEvents() {
+  $$('.start-simulation-btn').forEach(button => {
     button.addEventListener('click', () => {
-      const subjectId = button.dataset.subjectId;
-      state.attempts.push({
-        id: cryptoRandomId(),
-        subjectId,
-        semester: normalizeSemester(subjectById(subjectId)?.semester),
-        date: new Date().toISOString().slice(0, 10),
-        title: 'Simulacro manual registrado',
-        score: null,
-        notes: 'Intento manual. En próximas versiones se recogerá estructura, respuestas y nota calculada.'
-      });
-      saveState();
+      state.ui.activeSimulationId = button.dataset.simulationId;
+      saveState({ sync: false });
       renderSimulations();
+      $('#simulationStage')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
+  $('.cancel-simulation-btn')?.addEventListener('click', () => {
+    state.ui.activeSimulationId = null;
+    saveState({ sync: false });
+    renderSimulations();
+  });
+  $('#activeSimulationForm')?.addEventListener('submit', event => {
+    event.preventDefault();
+    const simulation = simulationById(event.currentTarget.dataset.simulationId);
+    if (!simulation) return;
+    const result = evaluateSimulation(simulation, new FormData(event.currentTarget));
+    renderSimulationResult(result, simulation);
+    state.attempts.push({
+      id: cryptoRandomId(),
+      subjectId: simulation.subjectId,
+      semester: simulation.semester,
+      date: new Date().toISOString().slice(0, 10),
+      title: simulation.title,
+      score: result.score,
+      notes: result.notes
+    });
+    updateProgressAfterSimulation(simulation.subjectId, result.score);
+    saveState();
+    renderAttempts(filteredAttempts());
+  });
 }
+
+function evaluateSimulation(simulation, formData) {
+  const questions = questionsForSimulation(simulation);
+  let correct = 0;
+  let wrong = 0;
+  let blank = 0;
+  const detail = [];
+  questions.forEach(question => {
+    const answer = String(formData.get(`q-${question.id}`) || '');
+    if (!answer) {
+      blank += 1;
+      detail.push({ question, answer: 'En blanco', ok: false, blank: true });
+      return;
+    }
+    const ok = answer === question.correctAnswer;
+    if (ok) correct += 1; else wrong += 1;
+    detail.push({ question, answer, ok, blank: false });
+  });
+  const developmentScore = Math.max(0, Math.min(Number(simulation.developmentMax || 0), Number(String(formData.get('developmentScore') || '0').replace(',', '.')) || 0));
+  const objective = calculateSimulationObjective(simulation, correct, wrong, blank, questions.length);
+  const score = Number(Math.max(0, Math.min(10, objective.score + developmentScore)).toFixed(2));
+  return {
+    correct,
+    wrong,
+    blank,
+    objective,
+    developmentScore,
+    score,
+    detail,
+    notes: `${correct} aciertos, ${wrong} errores, ${blank} en blanco. Objetiva: ${objective.label}. Desarrollo: ${developmentScore}/${simulation.developmentMax || 0}. Nota registrada: ${score}.`
+  };
+}
+
+function calculateSimulationObjective(simulation, correct, wrong, blank, total) {
+  if (simulation.scoring === 'bases_tf') {
+    const score = ((correct - wrong) / total) * 10;
+    return { score: Math.max(0, score), label: `${Math.max(0, score).toFixed(2)}/10 con fórmula V/F escalada` };
+  }
+  if (simulation.scoring === 'centros_mixed') {
+    const score = Math.max(0, correct * (6 / total) - wrong * (3 / total));
+    return { score, label: `${score.toFixed(2)}/6 en test` };
+  }
+  if (simulation.scoring === 'metodos_objective') {
+    const objective10 = Math.max(0, ((correct - (wrong / 2)) / total) * 10);
+    const score = objective10 * 0.8;
+    return { score, label: `${objective10.toFixed(2)}/10 en objetiva; ${score.toFixed(2)}/8 ponderado` };
+  }
+  const fallback = total ? (correct / total) * 10 : 0;
+  return { score: fallback, label: `${fallback.toFixed(2)}/10` };
+}
+
+function renderSimulationResult(result, simulation) {
+  const target = $('#simulationResult');
+  if (!target) return;
+  const wrongItems = result.detail.filter(item => !item.ok);
+  target.innerHTML = `
+    <div class="result-card ${result.score >= 5 ? 'success' : 'danger'}">
+      <div>
+        <span class="metric-label">Nota estimada</span>
+        <strong>${result.score}</strong>
+        <p>${escapeHtml(result.notes)}</p>
+      </div>
+      <div class="result-stats">
+        <span>Aciertos: ${result.correct}</span>
+        <span>Errores: ${result.wrong}</span>
+        <span>Blanco: ${result.blank}</span>
+      </div>
+    </div>
+    <div class="correction-list">
+      <h4>Corrección inmediata</h4>
+      ${wrongItems.length ? wrongItems.map(item => `
+        <div class="correction-item">
+          <strong>${escapeHtml(item.question.statement)}</strong>
+          <p>Tu respuesta: ${escapeHtml(item.answer)} · Correcta: ${escapeHtml(item.question.correctAnswer)}</p>
+          <p>${escapeHtml(item.question.explanation || '')}</p>
+        </div>
+      `).join('') : '<p class="subtle-note">No hay errores en la parte objetiva.</p>'}
+    </div>
+  `;
+}
+
+function updateProgressAfterSimulation(subjectId, score) {
+  state.subjects = state.subjects.map(subject => {
+    if (subject.id !== subjectId) return subject;
+    const increment = score >= 7 ? 3 : score >= 5 ? 2 : 1;
+    return { ...subject, progress: Math.min(100, Number(subject.progress || 0) + increment) };
+  });
+}
+
 
 function renderAttempts(attempts = state.attempts) {
   if (!attempts.length) return renderEmptyState();
@@ -2493,7 +2834,7 @@ function renderSettings() {
   $('#exportDataBtn').addEventListener('click', exportData);
   $('#syncNowBtn').addEventListener('click', () => persistStateToSupabase({ immediate: true }));
   $('#resetDataBtn').addEventListener('click', () => {
-    if (!confirm('¿Seguro que quieres restaurar los datos iniciales de GRADUS v0.7?')) return;
+    if (!confirm('¿Seguro que quieres restaurar los datos iniciales de GRADUS v0.8?')) return;
     state = normalizeState(DEFAULT_STATE);
     saveState();
     renderSettings();
