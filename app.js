@@ -1,4 +1,7 @@
 const STORAGE_KEY = 'gradus.simple.state';
+function safeGetStorage(key) { try { return localStorage.getItem(key); } catch { return null; } }
+function safeSetStorage(key, value) { try { localStorage.setItem(key, value); } catch {} }
+function safeRemoveStorage(key) { try { localStorage.removeItem(key); } catch {} }
 const MATERIAL_BUCKET = 'gradus-materials';
 
 const SEMESTERS = {
@@ -1333,7 +1336,7 @@ window.addEventListener('beforeinstallprompt', event => {
 
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
-  localStorage.setItem('gradus.installed', '1');
+  safeSetStorage('gradus.installed', '1');
   updateInstallButtons();
 });
 
@@ -1346,7 +1349,7 @@ function loadLocalState() {
     taskChecks: {},
     settings: { notifications: false, inactivityHour: '21:00' }
   };
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = safeGetStorage(STORAGE_KEY);
   if (!raw) return base;
   try {
     const parsed = JSON.parse(raw);
@@ -1362,7 +1365,7 @@ function loadLocalState() {
     return base;
   }
 }
-function saveLocalState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function saveLocalState() { safeSetStorage(STORAGE_KEY, JSON.stringify(state)); }
 function mergeById(a, b) { const map = new Map(); [...a, ...b].forEach(item => map.set(item.id, item)); return [...map.values()]; }
 function todayISO() { return new Date().toISOString().slice(0,10); }
 function toDate(str) { const [y,m,d] = String(str).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); }
@@ -1384,7 +1387,7 @@ function isStandaloneMode() {
 }
 
 function updateInstallButtons() {
-  const installed = isStandaloneMode() || localStorage.getItem('gradus.installed') === '1';
+  const installed = isStandaloneMode() || safeGetStorage('gradus.installed') === '1';
   document.querySelectorAll('[data-install-app]').forEach(button => {
     button.hidden = installed;
     button.textContent = deferredInstallPrompt ? 'Instalar GRADUS' : 'Instalar / añadir';
@@ -1564,7 +1567,7 @@ async function loadRemoteData() {
   } catch {}
 }
 function markVisit() {
-  localStorage.setItem('gradus.lastVisit', todayISO());
+  safeSetStorage('gradus.lastVisit', todayISO());
 }
 
 function renderAll() {
@@ -2044,9 +2047,9 @@ function maybeNotifyUpcoming(force=false) {
     const notice = Number(e.notice || 7);
     if (d >= 0 && d <= notice) {
       const key = `${keyPrefix}.${e.id}`;
-      if (force || !localStorage.getItem(key)) {
+      if (force || !safeGetStorage(key)) {
         notify('GRADUS: fecha próxima', `${e.title}: ${formatDate(e.date)} · ${subject(e.subjectId).name}`, `event-${e.id}`);
-        localStorage.setItem(key, '1');
+        safeSetStorage(key, '1');
       }
     }
   });
@@ -2057,9 +2060,9 @@ function checkStudyReminder() {
   const now = new Date();
   if (now.getHours() !== h || now.getMinutes() !== m) return;
   const key = `gradus.studyReminder.${todayISO()}`;
-  if (!state.studyLog[todayISO()] && !localStorage.getItem(key)) {
+  if (!state.studyLog[todayISO()] && !safeGetStorage(key)) {
     notify('GRADUS: estudio diario', 'Hoy no has registrado estudio. Entra un momento y deja cerrada la sesión del día.', 'daily-study');
-    localStorage.setItem(key, '1');
+    safeSetStorage(key, '1');
   }
 }
 function notifyIfPreviousDayMissed() {
@@ -2067,9 +2070,9 @@ function notifyIfPreviousDayMissed() {
   const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
   const y = yesterday.toISOString().slice(0,10);
   const key = `gradus.missed.${y}`;
-  if (!state.studyLog[y] && !localStorage.getItem(key)) {
+  if (!state.studyLog[y] && !safeGetStorage(key)) {
     notify('GRADUS: revisión pendiente', 'Ayer no consta una sesión de estudio registrada.', 'missed-day');
-    localStorage.setItem(key, '1');
+    safeSetStorage(key, '1');
   }
 }
 async function handleUpload(form) {
@@ -2125,4 +2128,13 @@ function handleDocumentClick(event) {
   }
 }
 
-init().catch(() => showLogin('No se ha podido cargar GRADUS. Pulsa “Reparar carga” o recarga la página.'));
+init().catch(error => {
+  console.error('GRADUS_BOOT_ERROR', error);
+  try { showLogin('No se ha podido cargar GRADUS. Abre la dirección con ?repair=1 y recarga.'); }
+  catch {
+    const login = document.getElementById('loginScreen');
+    const shell = document.getElementById('appShell');
+    if (shell) shell.hidden = true;
+    if (login) login.hidden = false;
+  }
+});
