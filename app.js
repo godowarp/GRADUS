@@ -1,6 +1,7 @@
-const APP_VERSION = '0.3';
-const STORAGE_KEY = 'gradus.v0.3.state';
-const LEGACY_STORAGE_KEYS = ['gradus.v0.2.state', 'gradus.v0.1.state'];
+const APP_VERSION = '0.4';
+const STORAGE_KEY = 'gradus.v0.4.state';
+const LEGACY_STORAGE_KEYS = ['gradus.v0.3.state', 'gradus.v0.2.state', 'gradus.v0.1.state'];
+const MATERIAL_BUCKET = 'gradus-materials';
 
 const SEMESTERS = {
   all: 'Todo el curso',
@@ -265,6 +266,25 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
+function sanitizeFileName(value) {
+  const name = String(value || 'documento')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 120);
+  return name || `documento-${Date.now()}`;
+}
+
+function formatFileSize(bytes) {
+  const value = Number(bytes || 0);
+  if (!value) return 'Sin tamaño';
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 ** 2) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / (1024 ** 2)).toFixed(1)} MB`;
+}
+
 function normalizeSubject(subject) {
   return {
     ...subject,
@@ -300,7 +320,16 @@ function normalizeState(rawState) {
   };
 
   merged.events = merged.events.map(event => ({ ...event, id: event.id || cryptoRandomId(), semester: itemSemester(event) }));
-  merged.materials = merged.materials.map(material => ({ ...material, id: material.id || cryptoRandomId(), semester: itemSemester(material) }));
+  merged.materials = merged.materials.map(material => ({
+    ...material,
+    id: material.id || cryptoRandomId(),
+    semester: itemSemester(material),
+    filePath: material.filePath || null,
+    fileName: material.fileName || null,
+    fileSize: Number(material.fileSize || 0),
+    mimeType: material.mimeType || null,
+    uploadedAt: material.uploadedAt || null
+  }));
   merged.exams = merged.exams.map(exam => ({ ...exam, id: exam.id || cryptoRandomId(), semester: itemSemester(exam) }));
   merged.attempts = merged.attempts.map(attempt => ({ ...attempt, id: attempt.id || cryptoRandomId(), semester: itemSemester(attempt) }));
   merged.questions = merged.questions.map(question => ({ ...question, id: question.id || cryptoRandomId(), semester: itemSemester(question), frequency: Number(question.frequency || 1) }));
@@ -623,7 +652,11 @@ function rowFromMaterial(material) {
     source: material.source,
     status: material.status,
     notes: material.notes,
-    file_path: material.filePath || null
+    file_path: material.filePath || null,
+    file_name: material.fileName || null,
+    file_size: Number(material.fileSize || 0) || null,
+    mime_type: material.mimeType || null,
+    uploaded_at: material.uploadedAt || null
   };
 }
 
@@ -637,7 +670,11 @@ function materialFromRow(row) {
     source: row.source,
     status: row.status,
     notes: row.notes,
-    filePath: row.file_path
+    filePath: row.file_path,
+    fileName: row.file_name,
+    fileSize: row.file_size,
+    mimeType: row.mime_type,
+    uploadedAt: row.uploaded_at
   };
 }
 
@@ -1245,10 +1282,17 @@ function renderMaterialList(materials) {
       <div>
         <strong>${escapeHtml(material.title)}</strong>
         <p>${escapeHtml(material.kind)} · ${escapeHtml(material.source || 'Sin fuente')} · ${semesterLabel(itemSemester(material))}</p>
+        ${material.filePath ? `<p><strong>Archivo privado:</strong> ${escapeHtml(material.fileName || 'archivo')} · ${formatFileSize(material.fileSize)} · ${escapeHtml(material.mimeType || 'tipo no registrado')}</p>` : '<p class="subtle-note">Ficha registrada sin archivo adjunto.</p>'}
         ${material.notes ? `<p>${escapeHtml(material.notes)}</p>` : ''}
-        <div class="inline-actions"><button class="tiny-button danger-text" data-delete-collection="materials" data-delete-id="${escapeHtml(material.id)}">Eliminar material</button></div>
+        <div class="inline-actions">
+          ${material.filePath ? `<button class="tiny-button" data-open-material-id="${escapeHtml(material.id)}">Abrir archivo privado</button>` : ''}
+          <button class="tiny-button danger-text" data-delete-collection="materials" data-delete-id="${escapeHtml(material.id)}">Eliminar material</button>
+        </div>
       </div>
-      ${statusBadge(material.status)}
+      <div class="badge-stack">
+        ${statusBadge(material.status)}
+        ${material.filePath ? '<span class="badge success">Con archivo</span>' : '<span class="badge neutral">Sin archivo</span>'}
+      </div>
     </div>
   `).join('')}</div>`;
 }
@@ -1257,9 +1301,13 @@ function renderMaterials() {
   $('#materiales').innerHTML = `
     <div class="grid-12">
       <article class="card col-5">
-        <h3>Registrar material</h3>
-        <p style="color:var(--muted);margin-top:0">En esta versión se registra la ficha del documento. La subida real de archivos se incorporará con almacenamiento privado.</p>
-        <form id="materialForm" class="form-grid">
+        <h3>Registrar material privado</h3>
+        <p style="color:var(--muted);margin-top:0">Puedes crear una ficha de material y, si has iniciado sesión, subir el archivo a Supabase Storage en un bucket privado.</p>
+        <div class="notice storage-notice">
+          <strong>Privacidad</strong>
+          Los archivos se guardarán en la carpeta privada de tu usuario. No subas aquí claves, contraseñas ni documentación que no debas conservar en tu espacio personal.
+        </div>
+        <form id="materialForm" class="form-grid" enctype="multipart/form-data">
           <label class="span-2">Título<input name="title" required placeholder="Guía, manual, orientaciones..."></label>
           <label>Asignatura<select name="subjectId" required>${subjectOptions()}</select></label>
           <label>Tipo
@@ -1280,22 +1328,47 @@ function renderMaterials() {
               <option value="revisado">Revisado</option>
             </select>
           </label>
+          <label class="span-2 file-label">Archivo privado
+            <input name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+            <small>Máximo recomendado: 50 MB. Para manuales editoriales, mantén el acceso estrictamente privado.</small>
+          </label>
           <label class="span-2">Notas<textarea name="notes" rows="3"></textarea></label>
+          <p id="materialFormMessage" class="form-message span-2"></p>
           <button class="primary-action span-2">Guardar material</button>
         </form>
       </article>
       <article class="card col-7">
-        <h3>Biblioteca · ${semesterLabel(activeSemesterFilter())}</h3>
-        <div class="toolbar"><input id="materialSearch" type="search" placeholder="Buscar materiales..."></div>
+        <h3>Biblioteca privada · ${semesterLabel(activeSemesterFilter())}</h3>
+        <div class="toolbar">
+          <input id="materialSearch" type="search" placeholder="Buscar materiales...">
+          <select id="materialKindFilter">
+            <option value="all">Todos los tipos</option>
+            <option>Guía</option>
+            <option>Manual</option>
+            <option>Documento docente</option>
+            <option>Examen</option>
+            <option>PEC</option>
+            <option>Resumen propio</option>
+            <option>Otro</option>
+          </select>
+          <select id="materialFileFilter">
+            <option value="all">Con y sin archivo</option>
+            <option value="with">Solo con archivo</option>
+            <option value="without">Solo sin archivo</option>
+          </select>
+        </div>
         <div id="materialList"></div>
       </article>
     </div>
   `;
-  $('#materialForm').addEventListener('submit', event => {
+  $('#materialForm').addEventListener('submit', async event => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const message = $('#materialFormMessage');
     const subjectId = String(formData.get('subjectId'));
-    state.materials.push({
+    const file = formData.get('file');
+    const material = {
       id: cryptoRandomId(),
       title: String(formData.get('title')),
       subjectId,
@@ -1303,18 +1376,58 @@ function renderMaterials() {
       kind: String(formData.get('kind')),
       source: String(formData.get('source') || ''),
       status: String(formData.get('status')),
-      notes: String(formData.get('notes') || '')
-    });
+      notes: String(formData.get('notes') || ''),
+      filePath: null,
+      fileName: null,
+      fileSize: null,
+      mimeType: null,
+      uploadedAt: null
+    };
+
+    if (file && file instanceof File && file.size > 0) {
+      if (!supabaseClient || !authSession) {
+        message.textContent = 'Para subir archivos privados debes iniciar sesión en Supabase. Puedes guardar la ficha sin archivo o iniciar sesión.';
+        return;
+      }
+      message.textContent = 'Subiendo archivo privado...';
+      const safeName = sanitizeFileName(file.name);
+      const path = `${authSession.user.id}/${subjectId}/${Date.now()}-${safeName}`;
+      const { error: uploadError } = await supabaseClient.storage
+        .from(MATERIAL_BUCKET)
+        .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type || 'application/octet-stream' });
+      if (uploadError) {
+        message.textContent = `Error al subir el archivo: ${uploadError.message}`;
+        return;
+      }
+      material.filePath = path;
+      material.fileName = file.name;
+      material.fileSize = file.size;
+      material.mimeType = file.type || 'application/octet-stream';
+      material.uploadedAt = new Date().toISOString();
+    }
+
+    state.materials.push(material);
     saveState();
-    event.currentTarget.reset();
+    form.reset();
+    message.textContent = material.filePath ? 'Material y archivo guardados.' : 'Ficha de material guardada sin archivo.';
     renderMaterials();
   });
   const renderFiltered = () => {
     const query = ($('#materialSearch')?.value || '').toLowerCase();
-    const filtered = filteredMaterials().filter(material => `${material.title} ${material.kind} ${subjectName(material.subjectId)} ${material.notes}`.toLowerCase().includes(query));
+    const kind = $('#materialKindFilter')?.value || 'all';
+    const fileMode = $('#materialFileFilter')?.value || 'all';
+    const filtered = filteredMaterials().filter(material => {
+      const content = `${material.title} ${material.kind} ${subjectName(material.subjectId)} ${material.notes} ${material.fileName || ''}`.toLowerCase();
+      const matchesText = content.includes(query);
+      const matchesKind = kind === 'all' || material.kind === kind;
+      const matchesFile = fileMode === 'all' || (fileMode === 'with' ? Boolean(material.filePath) : !material.filePath);
+      return matchesText && matchesKind && matchesFile;
+    });
     $('#materialList').innerHTML = renderMaterialList(filtered);
   };
   $('#materialSearch').addEventListener('input', renderFiltered);
+  $('#materialKindFilter').addEventListener('change', renderFiltered);
+  $('#materialFileFilter').addEventListener('change', renderFiltered);
   renderFiltered();
 }
 
@@ -1629,7 +1742,7 @@ function renderSettings() {
           <div class="list-item"><strong>Primer cuatrimestre</strong><p>Asignaturas, entregas, exámenes, simulacros y progreso del primer bloque.</p></div>
           <div class="list-item"><strong>Segundo cuatrimestre</strong><p>Asignaturas, PEC, exámenes y simulacros del segundo bloque.</p></div>
           <div class="list-item"><strong>Anuales / TFG</strong><p>Seguimiento continuo, tutoría, borradores, defensa y cronograma propio.</p></div>
-          <div class="list-item"><strong>Documentos privados</strong><p>La subida real de manuales y archivos irá en un bucket privado de Supabase en una fase posterior.</p></div>
+          <div class="list-item"><strong>Documentos privados</strong><p>La biblioteca puede guardar fichas y archivos en un bucket privado de Supabase Storage.</p></div>
         </div>
       </article>
     </div>
@@ -1676,6 +1789,39 @@ function populateEventSubjectSelect() {
   $('#eventSubjectSelect').innerHTML = subjectOptions();
 }
 
+async function openMaterialFile(materialId) {
+  const material = state.materials.find(item => String(item.id) === String(materialId));
+  if (!material?.filePath) {
+    alert('Este material no tiene archivo privado adjunto.');
+    return;
+  }
+  if (!supabaseClient || !authSession) {
+    alert('Debes iniciar sesión en Supabase para abrir archivos privados.');
+    return;
+  }
+  setSyncStatus('Generando enlace privado...', 'warning');
+  const { data, error } = await supabaseClient.storage
+    .from(MATERIAL_BUCKET)
+    .createSignedUrl(material.filePath, 60 * 10, { download: false });
+  if (error) {
+    console.error('Error al abrir archivo privado:', error);
+    setSyncStatus('Error al abrir archivo', 'danger');
+    alert(`No se pudo abrir el archivo: ${error.message}`);
+    return;
+  }
+  setSyncStatus('Sincronizado con Supabase', 'online');
+  window.open(data.signedUrl, '_blank', 'noopener');
+}
+
+async function deleteMaterialFile(material) {
+  if (!material?.filePath || !supabaseClient || !authSession) return;
+  const { error } = await supabaseClient.storage.from(MATERIAL_BUCKET).remove([material.filePath]);
+  if (error) {
+    console.warn('No se pudo eliminar el archivo privado asociado:', error.message);
+    setSyncStatus('Archivo no eliminado', 'warning');
+  }
+}
+
 async function deleteFromSupabase(collection, id) {
   if (!supabaseClient || !authSession) return;
   const tableMap = {
@@ -1698,6 +1844,12 @@ async function deleteFromSupabase(collection, id) {
 
 function setupGlobalActions() {
   document.addEventListener('click', async event => {
+    const openMaterialButton = event.target.closest('[data-open-material-id]');
+    if (openMaterialButton) {
+      await openMaterialFile(openMaterialButton.dataset.openMaterialId);
+      return;
+    }
+
     const deleteButton = event.target.closest('[data-delete-collection]');
     if (!deleteButton) return;
     const collection = deleteButton.dataset.deleteCollection;
@@ -1705,6 +1857,8 @@ function setupGlobalActions() {
     const labels = { events: 'fecha', materials: 'material', exams: 'examen', attempts: 'intento', questions: 'pregunta' };
     if (!state[collection] || !id) return;
     if (!confirm(`¿Eliminar esta ${labels[collection] || 'entrada'}?`)) return;
+    const materialToDelete = collection === 'materials' ? state.materials.find(item => String(item.id) === String(id)) : null;
+    if (materialToDelete) await deleteMaterialFile(materialToDelete);
     state[collection] = state[collection].filter(item => String(item.id) !== String(id));
     if (collection === 'exams') {
       state.questions = state.questions.filter(question => String(question.examId || '') !== String(id));
