@@ -1,6 +1,6 @@
-const APP_VERSION = '0.4';
-const STORAGE_KEY = 'gradus.v0.4.state';
-const LEGACY_STORAGE_KEYS = ['gradus.v0.3.state', 'gradus.v0.2.state', 'gradus.v0.1.state'];
+const APP_VERSION = '0.5';
+const STORAGE_KEY = 'gradus.v0.5.state';
+const LEGACY_STORAGE_KEYS = ['gradus.v0.4.state', 'gradus.v0.3.state', 'gradus.v0.2.state', 'gradus.v0.1.state'];
 const MATERIAL_BUCKET = 'gradus-materials';
 
 const SEMESTERS = {
@@ -848,6 +848,7 @@ function setView(viewId) {
     materiales: 'Materiales',
     examenes: 'Exámenes',
     simulacros: 'Simulacros',
+    planificacion: 'Planificación',
     progreso: 'Progreso',
     ajustes: 'Ajustes'
   };
@@ -862,6 +863,199 @@ function upcomingEvents(limit = 6) {
     .slice(0, limit);
 }
 
+
+function allVisibleEventsForPlanning() {
+  return [...filteredEvents()].sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+function eventPhase(days) {
+  if (days < 0) return { severity: 'danger', label: 'Vencido', phase: 'vencido' };
+  if (days === 0) return { severity: 'danger', label: 'Hoy', phase: 'hoy' };
+  if (days <= 3) return { severity: 'danger', label: `${days} días`, phase: 'critico' };
+  if (days <= 7) return { severity: 'warning', label: `${days} días`, phase: 'cierre' };
+  if (days <= 15) return { severity: 'warning', label: `${days} días`, phase: 'serio' };
+  if (days <= 30) return { severity: 'success', label: `${days} días`, phase: 'preparacion' };
+  return { severity: 'neutral', label: `${days} días`, phase: 'futuro' };
+}
+
+function recommendedActionForEvent(event, subject, days) {
+  const type = String(event.type || '').toLowerCase();
+  const progress = Number(subject?.progress || 0);
+  if (days < 0) return 'Revisar si sigue pendiente, registrar resultado o reprogramar inmediatamente.';
+  if (type.includes('examen')) {
+    if (days <= 3) return 'Hacer repaso final, revisar errores frecuentes y realizar al menos un simulacro breve.';
+    if (days <= 7) return 'Cerrar temario prioritario y realizar un simulacro con tiempo real.';
+    if (days <= 15) return 'Programar dos bloques de estudio y un simulacro parcial.';
+    return 'Planificar lectura, banco de preguntas y calendario de repasos.';
+  }
+  if (type.includes('entrega')) {
+    if (days <= 3) return 'Cerrar versión final, revisar formato, criterios y copia de seguridad.';
+    if (days <= 7) return 'Completar borrador y dejar margen para revisión formal.';
+    return 'Dividir el trabajo en lectura, esquema, redacción, revisión y entrega.';
+  }
+  if (type.includes('repaso')) return 'Realizar recuperación activa y registrar dudas o errores.';
+  if (progress < 25 && days <= 15) return 'Abrir ficha de asignatura y fijar un bloque mínimo de avance esta semana.';
+  return 'Revisar la fecha y comprobar si requiere preparación previa.';
+}
+
+function buildAcademicAlerts(limit = 12) {
+  const alerts = [];
+  const events = allVisibleEventsForPlanning();
+
+  events.forEach(event => {
+    const days = daysUntil(event.date);
+    if (days > 30) return;
+    const subject = subjectById(event.subjectId);
+    const phase = eventPhase(days);
+    alerts.push({
+      id: `event-${event.id}`,
+      severity: phase.severity,
+      label: phase.label,
+      title: event.title,
+      subtitle: `${subjectName(event.subjectId)} · ${event.type} · ${formatDate(event.date)}`,
+      text: recommendedActionForEvent(event, subject, days),
+      days,
+      subjectId: event.subjectId,
+      source: 'event'
+    });
+  });
+
+  filteredSubjects().forEach(subject => {
+    const progress = Number(subject.progress || 0);
+    const risk = String(subject.risk || 'medio');
+    const subjectEvents = events.filter(event => event.subjectId === subject.id && daysUntil(event.date) >= 0).sort((a, b) => daysUntil(a.date) - daysUntil(b.date));
+    const nearest = subjectEvents[0];
+    const nearestDays = nearest ? daysUntil(nearest.date) : null;
+    if (risk === 'alto' && progress < 30) {
+      alerts.push({
+        id: `risk-${subject.id}`,
+        severity: 'danger',
+        label: 'Riesgo alto',
+        title: subject.name,
+        subtitle: nearest ? `Próxima fecha: ${nearest.title} · ${formatDate(nearest.date)}` : 'Sin fecha próxima registrada',
+        text: 'Conviene abrir un bloque de intervención: revisar guía, completar materiales mínimos y fijar primera sesión de estudio.',
+        days: nearestDays ?? 999,
+        subjectId: subject.id,
+        source: 'risk'
+      });
+    } else if (progress < 15 && nearestDays !== null && nearestDays <= 30) {
+      alerts.push({
+        id: `progress-${subject.id}`,
+        severity: 'warning',
+        label: 'Progreso bajo',
+        title: subject.name,
+        subtitle: `Quedan ${nearestDays} días para ${nearest.title}`,
+        text: 'El progreso registrado es bajo para la proximidad de la fecha. Programa una sesión corta de diagnóstico.',
+        days: nearestDays,
+        subjectId: subject.id,
+        source: 'progress'
+      });
+    }
+  });
+
+  return alerts
+    .sort((a, b) => severityWeight(a.severity) - severityWeight(b.severity) || a.days - b.days || a.title.localeCompare(b.title, 'es'))
+    .slice(0, limit);
+}
+
+function severityWeight(severity) {
+  return { danger: 0, warning: 1, success: 2, neutral: 3 }[severity] ?? 4;
+}
+
+function subjectPriorityScore(subject) {
+  const progress = Number(subject.progress || 0);
+  const riskScore = { alto: 45, medio: 25, bajo: 8 }[subject.risk] ?? 15;
+  const events = state.events.filter(event => event.subjectId === subject.id && matchesSemester(event));
+  const upcoming = events.map(event => daysUntil(event.date)).filter(days => days >= 0).sort((a, b) => a - b)[0];
+  const dateScore = upcoming == null ? 5 : upcoming <= 3 ? 45 : upcoming <= 7 ? 35 : upcoming <= 15 ? 24 : upcoming <= 30 ? 14 : 5;
+  const progressScore = Math.max(0, 35 - Math.round(progress / 3));
+  const questions = state.questions.filter(question => question.subjectId === subject.id).length;
+  const evidenceScore = questions ? 0 : 8;
+  return riskScore + dateScore + progressScore + evidenceScore;
+}
+
+function buildStudyPlan() {
+  return filteredSubjects()
+    .map(subject => {
+      const score = subjectPriorityScore(subject);
+      const progress = Number(subject.progress || 0);
+      let minutes = 25;
+      if (score >= 95) minutes = 120;
+      else if (score >= 75) minutes = 90;
+      else if (score >= 55) minutes = 60;
+      else if (score >= 35) minutes = 40;
+      const focus = progress < 10 ? 'diagnóstico inicial y organización de materiales' : progress < 35 ? 'lectura guiada y esquema base' : progress < 65 ? 'preguntas históricas y recuperación activa' : 'simulacro, repaso de errores y cierre';
+      return { subject, score, minutes, focus };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
+}
+
+function renderAlertList(alerts) {
+  if (!alerts.length) return renderEmptyState();
+  return `<div class="list alert-list">${alerts.map(alert => `
+    <div class="list-item alert-item ${escapeHtml(alert.severity)}">
+      <div>
+        <strong>${escapeHtml(alert.title)}</strong>
+        <p>${escapeHtml(alert.subtitle)}</p>
+        <p>${escapeHtml(alert.text)}</p>
+        ${alert.subjectId ? `<div class="inline-actions"><button class="tiny-button subject-open" data-subject-id="${escapeHtml(alert.subjectId)}">Abrir asignatura</button></div>` : ''}
+      </div>
+      <div class="badge-stack"><span class="badge ${escapeHtml(alert.severity)}">${escapeHtml(alert.label)}</span></div>
+    </div>
+  `).join('')}</div>`;
+}
+
+function renderStudyPlanList(plan) {
+  if (!plan.length) return renderEmptyState();
+  return `<div class="list plan-list">${plan.map(item => `
+    <div class="list-item plan-item">
+      <div>
+        <strong>${escapeHtml(item.subject.name)}</strong>
+        <p>${semesterLabel(item.subject.semester)} · ${escapeHtml(item.minutes)} min recomendados · ${escapeHtml(item.focus)}</p>
+        <p>${escapeHtml(item.subject.strategy || 'Pendiente de estrategia específica.')}</p>
+        <div class="inline-actions">
+          <button class="tiny-button" data-add-study-event="${escapeHtml(item.subject.id)}" data-study-minutes="${escapeHtml(item.minutes)}">Añadir sesión</button>
+          <button class="tiny-button subject-open" data-subject-id="${escapeHtml(item.subject.id)}">Abrir ficha</button>
+        </div>
+      </div>
+      <div class="badge-stack">
+        ${riskBadge(item.subject.risk)}
+        <span class="badge neutral">Prioridad ${escapeHtml(item.score)}</span>
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
+function addStudyEvent(subjectId, minutes) {
+  const subject = subjectById(subjectId);
+  if (!subject) return;
+  const today = new Date().toISOString().slice(0, 10);
+  state.events.push({
+    id: cryptoRandomId(),
+    title: `Sesión de estudio · ${minutes} min`,
+    subjectId: subject.id,
+    semester: normalizeSemester(subject.semester),
+    type: 'Repaso',
+    date: today,
+    notes: `Sesión generada desde Planificación para ${subject.name}. Objetivo: avanzar con foco realista y registrar dudas.`
+  });
+  saveState();
+  renderPlanning();
+}
+
+function buildSemesterDiagnosis() {
+  return Object.entries(SEMESTERS)
+    .filter(([key]) => key !== 'all')
+    .map(([key, label]) => {
+      const subjects = state.subjects.filter(subject => normalizeSemester(subject.semester) === key);
+      const events = state.events.filter(event => itemSemester(event) === key);
+      const alerts = buildAcademicAlerts(50).filter(alert => subjects.some(subject => subject.id === alert.subjectId));
+      const avg = subjects.length ? Math.round(subjects.reduce((sum, subject) => sum + Number(subject.progress || 0), 0) / subjects.length) : 0;
+      return { key, label, subjects, events, alerts, avg };
+    });
+}
+
 function renderView(viewId) {
   const renderers = {
     inicio: renderHome,
@@ -870,6 +1064,7 @@ function renderView(viewId) {
     materiales: renderMaterials,
     examenes: renderExams,
     simulacros: renderSimulations,
+    planificacion: renderPlanning,
     progreso: renderProgress,
     ajustes: renderSettings
   };
@@ -882,6 +1077,8 @@ function renderHome() {
   const pendingHigh = subjects.filter(subject => subject.risk === 'alto').length;
   const configured = subjects.filter(subject => subject.status !== 'por_configurar' && subject.status !== 'por_decidir').length;
   const averageProgress = subjects.length ? Math.round(subjects.reduce((sum, subject) => sum + Number(subject.progress || 0), 0) / subjects.length) : 0;
+  const alerts = buildAcademicAlerts(6);
+  const urgentAlerts = alerts.filter(alert => alert.severity === 'danger').length;
 
   $('#inicio').innerHTML = `
     <div class="semester-strip">
@@ -899,9 +1096,9 @@ function renderHome() {
         <span class="metric-note">${configured} con datos iniciales útiles</span>
       </article>
       <article class="card metric col-3">
-        <span class="metric-label">Fechas próximas</span>
-        <span class="metric-value">${nextEvents.length}</span>
-        <span class="metric-note">filtradas por cuatrimestre</span>
+        <span class="metric-label">Avisos activos</span>
+        <span class="metric-value">${alerts.length}</span>
+        <span class="metric-note">${urgentAlerts} críticos o vencidos</span>
       </article>
       <article class="card metric col-3">
         <span class="metric-label">Riesgo alto</span>
@@ -936,6 +1133,17 @@ function renderHome() {
             </div>
           `).join('') || renderEmptyState()}
         </div>
+      </article>
+
+      <article class="card col-12">
+        <div class="section-heading">
+          <div>
+            <h3>Avisos y planificación inmediata</h3>
+            <p>Priorización automática según fechas, riesgo y progreso registrado.</p>
+          </div>
+          <button class="ghost-button" data-jump-view="planificacion">Abrir planificación</button>
+        </div>
+        ${renderAlertList(alerts)}
       </article>
 
       <article class="card col-12">
@@ -1019,13 +1227,8 @@ function renderCalendar() {
       </article>
       <article class="card col-5">
         <h3>Avisos automáticos internos</h3>
-        <p style="color:var(--muted);margin-top:0">La lógica de avisos se aplicará por cuatrimestre. Las notificaciones push del móvil se incorporarán en una fase posterior.</p>
-        <div class="list">
-          <div class="list-item"><strong>30 días antes</strong><p>Planificación del bloque de estudio.</p></div>
-          <div class="list-item"><strong>15 días antes</strong><p>Primer aviso serio y revisión del progreso.</p></div>
-          <div class="list-item"><strong>7 días antes</strong><p>Simulacro o cierre de borrador.</p></div>
-          <div class="list-item"><strong>3 días antes</strong><p>Alerta crítica si no hay progreso suficiente.</p></div>
-        </div>
+        <p class="subtle-note">GRADUS calcula avisos de 30, 15, 7 y 3 días combinando fechas, progreso y riesgo. Las notificaciones push reales llegarán en una fase posterior.</p>
+        ${renderAlertList(buildAcademicAlerts(5))}
       </article>
     </div>
   `;
@@ -1662,6 +1865,92 @@ function renderAttempts(attempts = state.attempts) {
   `).join('')}</div>`;
 }
 
+
+function renderPlanning() {
+  const alerts = buildAcademicAlerts(12);
+  const plan = buildStudyPlan();
+  const diagnosis = buildSemesterDiagnosis();
+  const urgent = alerts.filter(alert => alert.severity === 'danger').length;
+  const warning = alerts.filter(alert => alert.severity === 'warning').length;
+  const plannedMinutes = plan.reduce((sum, item) => sum + item.minutes, 0);
+
+  $('#planificacion').innerHTML = `
+    <div class="grid-12">
+      <article class="card metric col-3">
+        <span class="metric-label">Avisos críticos</span>
+        <span class="metric-value">${urgent}</span>
+        <span class="metric-note">vencidos, de hoy o a 3 días</span>
+      </article>
+      <article class="card metric col-3">
+        <span class="metric-label">Avisos preventivos</span>
+        <span class="metric-value">${warning}</span>
+        <span class="metric-note">entre 4 y 15 días</span>
+      </article>
+      <article class="card metric col-3">
+        <span class="metric-label">Tiempo sugerido</span>
+        <span class="metric-value">${plannedMinutes}</span>
+        <span class="metric-note">minutos para el próximo bloque</span>
+      </article>
+      <article class="card metric col-3">
+        <span class="metric-label">Vista activa</span>
+        <span class="metric-value">${filteredSubjects().length}</span>
+        <span class="metric-note">asignaturas en ${semesterLabel(activeSemesterFilter()).toLowerCase()}</span>
+      </article>
+
+      <article class="card col-7">
+        <div class="section-heading">
+          <div>
+            <h3>Plan de estudio recomendado</h3>
+            <p>Ordenado por riesgo, proximidad de fechas, progreso y falta de evidencias.</p>
+          </div>
+        </div>
+        ${renderStudyPlanList(plan)}
+      </article>
+
+      <article class="card col-5">
+        <h3>Avisos internos</h3>
+        ${renderAlertList(alerts)}
+      </article>
+
+      <article class="card col-12">
+        <h3>Diagnóstico por cuatrimestre</h3>
+        <div class="semester-diagnosis-grid">
+          ${diagnosis.map(item => `
+            <button class="semester-diagnosis-card ${activeSemesterFilter() === item.key ? 'active' : ''}" data-semester-jump="${escapeHtml(item.key)}">
+              <strong>${escapeHtml(item.label)}</strong>
+              <span>${item.subjects.length} asignaturas · ${item.events.length} fechas · ${item.avg}% progreso medio</span>
+              <small>${item.alerts.length} avisos asociados</small>
+            </button>
+          `).join('')}
+        </div>
+      </article>
+
+      <article class="card col-12">
+        <h3>Criterios de avisos</h3>
+        <div class="rule-grid">
+          <div class="rule-card"><strong>30 días</strong><p>Activación de planificación del bloque y revisión de materiales mínimos.</p></div>
+          <div class="rule-card"><strong>15 días</strong><p>Alerta preventiva: conviene cerrar lectura, esquema o borrador.</p></div>
+          <div class="rule-card"><strong>7 días</strong><p>Fase de cierre: simulacro, recuperación activa o revisión formal del trabajo.</p></div>
+          <div class="rule-card"><strong>3 días</strong><p>Alerta crítica: priorización inmediata y reducción de tareas no esenciales.</p></div>
+        </div>
+      </article>
+    </div>
+  `;
+
+  $$('[data-add-study-event]').forEach(button => {
+    button.addEventListener('click', () => addStudyEvent(button.dataset.addStudyEvent, Number(button.dataset.studyMinutes || 25)));
+  });
+  $$('[data-semester-jump]').forEach(button => {
+    button.addEventListener('click', () => {
+      state.ui.semesterFilter = button.dataset.semesterJump;
+      $('#globalSemesterFilter').value = state.ui.semesterFilter;
+      saveState({ sync: false });
+      renderPlanning();
+    });
+  });
+  attachSubjectButtons();
+}
+
 function renderProgress() {
   const subjects = filteredSubjects();
   $('#progreso').innerHTML = `
@@ -1750,7 +2039,7 @@ function renderSettings() {
   $('#exportDataBtn').addEventListener('click', exportData);
   $('#syncNowBtn').addEventListener('click', () => persistStateToSupabase({ immediate: true }));
   $('#resetDataBtn').addEventListener('click', () => {
-    if (!confirm('¿Seguro que quieres restaurar los datos iniciales de GRADUS v0.3?')) return;
+    if (!confirm('¿Seguro que quieres restaurar los datos iniciales de GRADUS v0.5?')) return;
     state = normalizeState(DEFAULT_STATE);
     saveState();
     renderSettings();
@@ -1844,6 +2133,12 @@ async function deleteFromSupabase(collection, id) {
 
 function setupGlobalActions() {
   document.addEventListener('click', async event => {
+    const jumpButton = event.target.closest('[data-jump-view]');
+    if (jumpButton) {
+      setView(jumpButton.dataset.jumpView);
+      return;
+    }
+
     const openMaterialButton = event.target.closest('[data-open-material-id]');
     if (openMaterialButton) {
       await openMaterialFile(openMaterialButton.dataset.openMaterialId);

@@ -1,7 +1,7 @@
-const CACHE_NAME = 'gradus-v0-4';
+const CACHE_NAME = 'gradus-v0-5';
 const STATIC_ASSETS = [
   './',
-  './index.html?v=0.4',
+  './index.html?v=0.5',
   './styles.css',
   './app.js',
   './manifest.json',
