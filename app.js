@@ -682,6 +682,583 @@ const SIMULATIONS = [
   }
 ];
 
+/* GRADUS v0.12 · Banco ampliado de Bases: histórico 2025-2026 y simulacros derivados */
+const BASES_2026_J1_QUESTIONS = [
+  {
+    "q": "El axón constituye el centro metabólico de la neurona.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el soma o cuerpo celular constituye el centro metabólico de la neurona; el axón conduce el impulso nervioso hacia otras células."
+  },
+  {
+    "q": "En las sinapsis eléctricas, el impulso nervioso pasa directamente a través de uniones comunicantes.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: en la sinapsis eléctrica la comunicación se produce directamente mediante uniones comunicantes o gap junctions."
+  },
+  {
+    "q": "El espacio subaracnoideo se encuentra entre la aracnoides y la duramadre.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el espacio subaracnoideo se sitúa entre la aracnoides y la piamadre; entre duramadre y aracnoides se describe el espacio subdural."
+  },
+  {
+    "q": "El núcleo rojo forma parte del bulbo raquídeo.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el núcleo rojo se localiza en el mesencéfalo, no en el bulbo raquídeo."
+  },
+  {
+    "q": "El epitálamo controla el sistema endocrino.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el control neuroendocrino se vincula principalmente al hipotálamo; el epitálamo incluye, entre otras estructuras, la glándula pineal."
+  },
+  {
+    "q": "Los dos hemisferios del cerebelo están unidos por el cuerpo calloso.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el cuerpo calloso une los hemisferios cerebrales; los hemisferios cerebelosos se relacionan a través del vermis."
+  },
+  {
+    "q": "La amígdala interviene de manera decisiva en la expresión de las emociones.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: la amígdala participa de forma decisiva en el procesamiento y expresión de las emociones."
+  },
+  {
+    "q": "La adquisición de los aprendizajes fuera de su correspondiente periodo sensible requerirá más tiempo y una mayor cantidad de recursos cognitivos.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: fuera del periodo sensible el aprendizaje sigue siendo posible, pero suele requerir más tiempo, práctica y recursos cognitivos."
+  },
+  {
+    "q": "El estado nutricional de las gestantes constituye un factor clave para garantizar tanto la salud materna como el adecuado crecimiento del feto.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: la nutrición materna es un factor relevante para el desarrollo fetal y la salud de la gestante."
+  },
+  {
+    "q": "La ansiedad y el estrés activan la respuesta neuroendocrina del organismo, incrementándose los niveles de cortisol en el torrente sanguíneo.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: la respuesta de estrés activa el eje neuroendocrino y se asocia al incremento de cortisol."
+  },
+  {
+    "q": "Las drogas legales e ilegales suelen atravesar fácilmente la membrana placentaria.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: muchas sustancias pueden atravesar la placenta y afectar al desarrollo fetal."
+  },
+  {
+    "q": "La evidencia científica respalda la necesidad de enriquecer de manera artificial los ambientes de aprendizaje.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: lo respaldado es evitar ambientes empobrecidos y favorecer experiencias ricas, significativas y ajustadas; no la necesidad de una estimulación artificial o sobreenriquecida."
+  },
+  {
+    "q": "El sueño paradójico se caracteriza por la presencia de ondas lentas y de gran amplitud en el electroencefalograma (EEG).",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el sueño paradójico o REM presenta actividad rápida y de baja amplitud, similar a la vigilia; las ondas lentas y amplias corresponden al sueño profundo."
+  },
+  {
+    "q": "El ejercicio físico de tipo aeróbico contribuye a mejorar los procesos de aprendizaje y memoria.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: el ejercicio aeróbico se asocia con beneficios para funciones cognitivas, aprendizaje y memoria."
+  },
+  {
+    "q": "Las emociones tienen un importante valor adaptativo.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: las emociones orientan la conducta y preparan respuestas adaptativas ante estímulos relevantes."
+  },
+  {
+    "q": "La atención es un constructo unidimensional.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la atención es un constructo multidimensional, con componentes como alerta, orientación y control ejecutivo."
+  },
+  {
+    "q": "Durante el desarrollo embrionario, la producción neuronal no sigue la misma secuencia temporal en todas las áreas del sistema nervioso.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: la neurogénesis y maduración de áreas del sistema nervioso siguen cronologías diferenciadas."
+  },
+  {
+    "q": "La edad y el nivel educativo de las mujeres embarazadas son variables explicativas del consumo de drogas durante el embarazo.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: variables sociodemográficas como edad y nivel educativo se relacionan con pautas de riesgo durante la gestación."
+  },
+  {
+    "q": "La mielinización de las diferentes regiones del sistema nervioso sigue un patrón temporal ordenado y predecible.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: la mielinización sigue una secuencia temporal organizada, aunque no ocurre al mismo tiempo en todas las regiones."
+  },
+  {
+    "q": "La mayoría de los periodos sensibles de aprendizaje tiene lugar durante la adolescencia.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: muchos periodos sensibles relevantes se sitúan en etapas tempranas del desarrollo, especialmente infancia y primeros años."
+  },
+  {
+    "q": "La mielinización del cuerpo calloso durante la adolescencia dificulta la comunicación entre los hemisferios.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la mielinización del cuerpo calloso favorece la comunicación y conectividad interhemisférica."
+  },
+  {
+    "q": "Durante la adolescencia, la glándula pineal comienza a liberar melatonina más tarde, produciéndose un desplazamiento del ciclo biológico del sueño.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: en la adolescencia suele retrasarse la liberación de melatonina, con tendencia a acostarse y dormirse más tarde."
+  },
+  {
+    "q": "Durante la adultez tardía, puede observarse, a medida que se envejece, un incremento en la activación bilateral del cerebro al realizar tareas que inicialmente estaban lateralizadas.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: se ha descrito mayor activación bilateral como posible mecanismo compensatorio en el envejecimiento."
+  },
+  {
+    "q": "La velocidad de procesamiento de la información aumenta a medida que envejecemos.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la velocidad de procesamiento tiende a disminuir con el envejecimiento."
+  },
+  {
+    "q": "La morfología hace referencia al significado de las palabras.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la morfología estudia la estructura interna y formación de las palabras; el significado corresponde a la semántica."
+  },
+  {
+    "q": "Los aprendizajes relativos al léxico mental pueden adquirirse con la misma efectividad a lo largo de toda la vida.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el léxico puede seguir aprendíendose durante toda la vida, pero la efectividad y facilidad no son idénticas en todas las etapas."
+  },
+  {
+    "q": "De acuerdo con el efecto de superioridad de la palabra, durante la lectura, las letras se reconocen de manera más rápida y eficaz en el contexto de una palabra que cuando se presentan aisladas.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: el efecto de superioridad de la palabra indica que las letras se reconocen mejor dentro de palabras que de forma aislada."
+  },
+  {
+    "q": "Conocer el significado de una palabra implica conocer también su equivalencia gráfica.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: conocer el significado no implica necesariamente conocer su representación ortográfica o equivalencia gráfica."
+  },
+  {
+    "q": "El área de Broca es una región cerebral localizada en la parte posterior del lóbulo temporal izquierdo.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el área de Broca se localiza en el lóbulo frontal izquierdo; la región temporal posterior se asocia clásicamente al área de Wernicke."
+  },
+  {
+    "q": "Se habla de dificultad de aprendizaje de la lectura cuando el rendimiento en lectura es inferior al esperado, aunque esto no interfiera significativamente con el rendimiento académico o con las actividades de la vida cotidiana que exigen habilidades para la lectura.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la dificultad de aprendizaje debe interferir de forma significativa en el rendimiento académico o en actividades que requieren lectura."
+  },
+  {
+    "q": "Cada operación matemática involucra muchas zonas cerebrales diferentes.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: el procesamiento matemático implica redes distribuidas y no una única zona cerebral aislada."
+  },
+  {
+    "q": "Todos los métodos de enseñanza de las matemáticas desarrollan las mismas redes y patrones de activación del procesamiento matemático.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: distintos métodos de enseñanza pueden implicar estrategias y patrones de activación diferentes."
+  },
+  {
+    "q": "En el razonamiento de tipo deductivo, la conclusión o conocimiento resultante es nuevo.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: en la deducción la conclusión se deriva necesariamente de las premisas; la generación de conocimiento nuevo e incierto es propia del razonamiento inductivo."
+  },
+  {
+    "q": "En el conocido como sesgo de la creencia, las creencias preexistentes influyen en la capacidad para aceptar nuevas conclusiones, aunque estén respaldadas lógicamente por las premisas.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: el sesgo de la creencia hace que aceptemos o rechacemos conclusiones por su plausibilidad y no solo por su validez lógica."
+  },
+  {
+    "q": "La corteza prefrontal juega un papel primordial en la producción del razonamiento.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: la corteza prefrontal participa en funciones ejecutivas relevantes para el razonamiento."
+  },
+  {
+    "q": "Nuestra capacidad de razonar de forma eficaz vendrá marcada tanto por la maduración del sistema nervioso como por las experiencias y aprendizajes adquiridos.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: el razonamiento depende de la maduración neurobiológica y de la experiencia acumulada."
+  },
+  {
+    "q": "El esfuerzo y el tiempo en hallar la solución a un problema son independientes de la familiaridad con el mismo.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la familiaridad con un problema influye en el esfuerzo, el tiempo y las estrategias de resolución."
+  },
+  {
+    "q": "El pensamiento divergente es equivalente a la creatividad.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el pensamiento divergente es un componente o vía relacionada con la creatividad, pero no equivale por completo a ella."
+  },
+  {
+    "q": "La experiencia y los conocimientos previos de los expertos son las claves diferenciales de su eficiente ejecución para resolver un problema frente a los novatos.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: los expertos resuelven mejor muchos problemas por la organización de sus conocimientos y experiencia previa."
+  },
+  {
+    "q": "El heurístico de representatividad hace referencia al fenómeno por el cual las elecciones se ven sistemáticamente alteradas por el lenguaje utilizado en la formulación de las opciones.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: esa descripción corresponde al efecto marco; el heurístico de representatividad se basa en juzgar por semejanza con un prototipo o categoría."
+  }
+];
+const BASES_2026_J2_QUESTIONS = [
+  {
+    "q": "En el cerebro, las células gliales son menos numerosas que las neuronas.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: las células gliales son muy abundantes y cumplen funciones esenciales de soporte, protección, nutrición y mielinización."
+  },
+  {
+    "q": "En las sinapsis eléctricas, las membranas de las neuronas presinápticas y postsinápticas están separadas por la hendidura sináptica.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: en la sinapsis eléctrica la comunicación se produce mediante uniones comunicantes; la hendidura sináptica caracteriza a la sinapsis química."
+  },
+  {
+    "q": "La duramadre es una membrana protectora de tejido conjuntivo que se encuentra íntimamente adherida al encéfalo.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la piamadre es la meninge íntimamente adherida al tejido nervioso; la duramadre es la capa más externa y resistente."
+  },
+  {
+    "q": "El hipotálamo forma parte del diencéfalo.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: el diencéfalo incluye estructuras como tálamo, hipotálamo, epitálamo y subtálamo."
+  },
+  {
+    "q": "La glándula pineal está implicada en la regulación de los ciclos sueño-vigilia.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: la pineal secreta melatonina y participa en la regulación circadiana del sueño-vigilia."
+  },
+  {
+    "q": "Las fibras de asociación conectan regiones corticales del mismo hemisferio.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: las fibras de asociación conectan áreas corticales dentro de un mismo hemisferio."
+  },
+  {
+    "q": "La formación hipocampal está especialmente implicada en los procesos de aprendizaje y de memoria.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: el hipocampo es esencial para aprendizaje y memoria declarativa."
+  },
+  {
+    "q": "El periodo más intenso de neurogénesis tiene lugar durante el primer año de vida extrauterina.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el periodo más intenso de neurogénesis se produce durante el desarrollo prenatal."
+  },
+  {
+    "q": "Las necesidades nutricionales del feto y de la gestante pueden ser satisfechas con una dieta variada y equilibrada.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: una dieta variada y equilibrada puede cubrir las necesidades nutricionales de gestante y feto, salvo indicación médica específica."
+  },
+  {
+    "q": "El efecto pernicioso del estrés prenatal parece depender del tipo de estrés, el momento de la gestación o el sexo del feto.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: los efectos del estrés prenatal dependen de variables como intensidad, tipo, momento gestacional y características del feto."
+  },
+  {
+    "q": "El Trastorno del Espectro Alcohólico Fetal (TEAF) se asocia a la exposición postnatal al alcohol.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el TEAF se asocia a la exposición prenatal al alcohol."
+  },
+  {
+    "q": "Los resultados de la investigación neurocientífica advierten sobre las consecuencias nefastas de los ambientes empobrecidos en el desarrollo.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: los ambientes empobrecidos o de privación pueden afectar negativamente al desarrollo cerebral y cognitivo."
+  },
+  {
+    "q": "Las ondas registradas mediante EEG durante el sueño profundo son de baja amplitud, similares a las que se registran en el estado de vigilia.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el sueño profundo se caracteriza por ondas lentas y de gran amplitud."
+  },
+  {
+    "q": "Los ácidos grasos Omega 3 y Omega 6 son los únicos nutrientes necesarios para un buen funcionamiento cognitivo.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: son nutrientes relevantes, pero el funcionamiento cognitivo depende de una nutrición global adecuada y de múltiples factores."
+  },
+  {
+    "q": "Las emociones ejercen un papel fundamental tanto en los procesos de aprendizaje como en los de memoria.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: la emoción modula atención, codificación, consolidación y recuperación de la información."
+  },
+  {
+    "q": "Las neuronas espejo podrían ser el mecanismo neural responsable del control emocional.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: las neuronas espejo se relacionan con observación/imitación y comprensión de acciones; el control emocional implica redes prefrontales y límbicas."
+  },
+  {
+    "q": "La mayoría de las neuronas presentes en un sujeto en el momento de su nacimiento se generaron a partir del sexto mes de gestación.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la neurogénesis principal ocurre antes; hacia el nacimiento ya existe la mayor parte de neuronas, pero no se generan mayoritariamente desde el sexto mes."
+  },
+  {
+    "q": "Las mujeres embarazadas con niveles educativos más bajos tienden a percibir un riesgo menor sobre los efectos dañinos de la exposición a sustancias de abuso en el desarrollo fetal.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: el nivel educativo puede relacionarse con percepción de riesgo y conductas durante el embarazo."
+  },
+  {
+    "q": "La corteza prefrontal es una de las primeras regiones del cerebro en completar su desarrollo.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la corteza prefrontal es una de las regiones que completa su desarrollo más tardíamente."
+  },
+  {
+    "q": "Las experiencias musicales informales parecen contribuir al desarrollo cerebral durante los primeros años de vida.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: las experiencias musicales tempranas pueden contribuir al desarrollo cerebral y cognitivo."
+  },
+  {
+    "q": "Durante la adolescencia, se observa un aumento considerable del tamaño del cuerpo calloso.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: en la adolescencia se producen cambios en conectividad y mielinización, incluido el cuerpo calloso."
+  },
+  {
+    "q": "Adelantar la hora de inicio de las clases durante la etapa de Educación Secundaria parece mejorar los resultados educativos de los estudiantes.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: lo que suele proponerse es retrasar, no adelantar, el inicio de las clases para ajustarlo mejor al ritmo circadiano adolescente."
+  },
+  {
+    "q": "Una vez alcanzada la etapa adulta, el cerebro deja de experimentar cambios estructurales y funcionales.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el cerebro adulto mantiene plasticidad y puede experimentar cambios estructurales y funcionales."
+  },
+  {
+    "q": "El entrenamiento cognitivo puede contribuir a contrarrestar el deterioro cognitivo asociado al envejecimiento.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: el entrenamiento cognitivo puede contribuir a preservar o mejorar funciones cognitivas en el envejecimiento."
+  },
+  {
+    "q": "Un mismo fonema puede pronunciarse de muy diferentes formas.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: un fonema puede tener realizaciones fonéticas distintas según contexto, hablante o variante lingüística."
+  },
+  {
+    "q": "El periodo sensible para el aprendizaje del componente pragmático del lenguaje abarca desde el nacimiento hasta los 3 años de edad, aproximadamente.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la pragmática se desarrolla durante un periodo más prolongado y depende de la interacción social y uso contextual del lenguaje."
+  },
+  {
+    "q": "La desambiguación léxica durante la lectura supone adjudicar un significado concreto a una palabra entre todos los posibles.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: desambiguar léxicamente es seleccionar el significado pertinente en un contexto concreto."
+  },
+  {
+    "q": "En la copia de un texto escrito intervienen todos los procesos que normalmente tienen lugar en la escritura como actividad de producción lingüística.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la copia es reproducción gráfica y no exige todos los procesos de planificación y producción lingüística propios de la escritura compositiva."
+  },
+  {
+    "q": "El área de Broca es una región cerebral involucrada en la comprensión del lenguaje.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el área de Broca se asocia principalmente con producción del lenguaje; la comprensión se vincula clásicamente al área de Wernicke y redes temporales."
+  },
+  {
+    "q": "La dificultad de aprendizaje de la lectura frecuentemente se asocia a dificultades de aprendizaje de la escritura y del cálculo.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: las dificultades específicas de aprendizaje pueden coexistir y afectar lectura, escritura y cálculo."
+  },
+  {
+    "q": "El lóbulo temporal es preeminente en la representación espacial de los números.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: la representación espacial y magnitud numérica se vincula especialmente a regiones parietales, como el surco intraparietal."
+  },
+  {
+    "q": "En la enseñanza de las matemáticas son preferibles los métodos centrados en el aprendizaje de instrucciones.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: son preferibles enfoques que promuevan comprensión conceptual, resolución de problemas y sentido numérico, no solo aprendizaje de instrucciones."
+  },
+  {
+    "q": "Gran parte de los problemas que resolvemos a diario nos exigen razonar de forma deductiva.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: muchos problemas cotidianos requieren razonamiento inductivo, analógico, heurístico y toma de decisiones bajo incertidumbre, no principalmente deducción formal."
+  },
+  {
+    "q": "El sesgo de confirmación consiste en buscar o atender preferentemente información consistente con las creencias propias y obviar información que las contradice.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: esa es la definición del sesgo de confirmación."
+  },
+  {
+    "q": "Tanto el razonamiento deductivo como el inductivo dependen de la activación de la red frontoparietal.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: ambos tipos de razonamiento implican redes frontoparietales relacionadas con control ejecutivo y procesamiento relacional."
+  },
+  {
+    "q": "El nivel educativo del individuo no influye en sus habilidades de razonamiento.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: el nivel educativo, la experiencia y los aprendizajes influyen en el desarrollo de habilidades de razonamiento."
+  },
+  {
+    "q": "Un problema siempre implicará una actividad representacional.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: resolver un problema exige representarlo mentalmente, definir metas, restricciones y posibles vías de solución."
+  },
+  {
+    "q": "Existen elementos que pueden afectar o limitar el desarrollo de la creatividad.",
+    "type": "tf",
+    "a": "Verdadero",
+    "exp": "Correcto: factores personales, contextuales, educativos y motivacionales pueden facilitar o limitar la creatividad."
+  },
+  {
+    "q": "El conocido como círculo virtuoso conduce a una espiral de fracaso o frustración en la resolución de problemas.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: una espiral de fracaso corresponde a un círculo vicioso; el círculo virtuoso favorece avance, confianza y mejor resolución."
+  },
+  {
+    "q": "El heurístico de accesibilidad explica por qué los juicios tienden a estar excesivamente influidos por una impresión, perspectiva o valor inicial.",
+    "type": "tf",
+    "a": "Falso",
+    "exp": "Afirmación correcta: esa descripción corresponde al heurístico de anclaje; la accesibilidad se relaciona con la facilidad para recordar ejemplos o información disponible."
+  }
+];
+
+function patchBaseAnswer(simId, textStart, answer, exp) {
+  const sim = SIMULATIONS.find(s => s.id === simId);
+  const q = sim?.questions?.find(item => item.q.startsWith(textStart));
+  if (q) { q.a = answer; q.exp = exp; q.reviewed = true; }
+}
+patchBaseAnswer(
+  'bases-2025-j1',
+  'Enriquecer de manera artificial los ambientes de aprendizaje',
+  'Falso',
+  'Afirmación correcta: la evidencia respalda evitar ambientes empobrecidos y ofrecer experiencias ricas, ajustadas y significativas; no la necesidad de sobreestimular o enriquecer artificialmente el ambiente.'
+);
+const BASES_2025_J1 = SIMULATIONS.find(s => s.id === 'bases-2025-j1')?.questions || [];
+const BASES_2025_J2 = SIMULATIONS.find(s => s.id === 'bases-2025-j2')?.questions || [];
+const BASES_HISTORICAL_BANK = [...BASES_2025_J1, ...BASES_2025_J2, ...BASES_2026_J1_QUESTIONS, ...BASES_2026_J2_QUESTIONS]
+  .map((q, i) => ({ ...q, bankIndex: i + 1 }));
+function basesPick(start, step, label) {
+  const picked = [];
+  let index = start;
+  const seen = new Set();
+  while (picked.length < 40 && seen.size < BASES_HISTORICAL_BANK.length) {
+    const item = BASES_HISTORICAL_BANK[index % BASES_HISTORICAL_BANK.length];
+    if (!seen.has(item.q)) {
+      picked.push({ ...item, exp: `${item.exp || ''} Patrón de repaso: ${label}.` });
+      seen.add(item.q);
+    }
+    index += step;
+  }
+  return picked;
+}
+SIMULATIONS.push(
+  {
+    id: 'bases-2026-j1-historico', subjectId: 'bases', title: 'Bases · Examen histórico 2026 primera semana',
+    format: 'Verdadero/Falso · 40 ítems · fórmula P = (A - E) / 4', duration: 120, scoring: 'vf40_penalized',
+    source: 'Examen UNED 2026 J1 del histórico aportado. Respuestas conceptuales revisadas una a una antes de incorporarse.',
+    questions: BASES_2026_J1_QUESTIONS
+  },
+  {
+    id: 'bases-2026-j2-historico', subjectId: 'bases', title: 'Bases · Examen histórico 2026 segunda semana',
+    format: 'Verdadero/Falso · 40 ítems · fórmula P = (A - E) / 4', duration: 120, scoring: 'vf40_penalized',
+    source: 'Examen UNED 2026 J2 del histórico aportado. Respuestas conceptuales revisadas una a una antes de incorporarse.',
+    questions: BASES_2026_J2_QUESTIONS
+  },
+  {
+    id: 'bases-mixto-alta-frecuencia-1', subjectId: 'bases', title: 'Bases · Simulacro mixto de alta frecuencia I',
+    format: 'Verdadero/Falso · 40 ítems · mezcla histórica 2025-2026', duration: 120, scoring: 'vf40_penalized',
+    source: 'Generado a partir de preguntas oficiales recientes y variaciones de patrones repetidos.',
+    questions: basesPick(0, 3, 'neuronas, neurodesarrollo, sueño, emoción, lenguaje y razonamiento')
+  },
+  {
+    id: 'bases-mixto-alta-frecuencia-2', subjectId: 'bases', title: 'Bases · Simulacro mixto de alta frecuencia II',
+    format: 'Verdadero/Falso · 40 ítems · mezcla histórica 2025-2026', duration: 120, scoring: 'vf40_penalized',
+    source: 'Generado a partir de preguntas oficiales recientes y variaciones de patrones repetidos.',
+    questions: basesPick(7, 5, 'preguntas falsas trampa y conceptos de formulación recurrente')
+  },
+  {
+    id: 'bases-mixto-neuro-y-desarrollo', subjectId: 'bases', title: 'Bases · Neurodesarrollo, sueño y emoción',
+    format: 'Verdadero/Falso · 40 ítems · entrenamiento temático', duration: 120, scoring: 'vf40_penalized',
+    source: 'Simulacro temático generado con preguntas oficiales recientes sobre sistema nervioso, desarrollo, sueño, emoción, estrés y atención.',
+    questions: basesPick(1, 4, 'bloque neurodesarrollo, sueño, emoción y atención')
+  },
+  {
+    id: 'bases-mixto-lenguaje-mates-razonamiento', subjectId: 'bases', title: 'Bases · Lenguaje, matemáticas, razonamiento y problemas',
+    format: 'Verdadero/Falso · 40 ítems · entrenamiento temático', duration: 120, scoring: 'vf40_penalized',
+    source: 'Simulacro temático generado con preguntas oficiales recientes sobre lenguaje, lectura, matemáticas, razonamiento y toma de decisiones.',
+    questions: basesPick(2, 7, 'bloque lenguaje, matemáticas, razonamiento, creatividad y decisiones')
+  },
+  {
+    id: 'bases-tricky-falsas', subjectId: 'bases', title: 'Bases · Trampas y falsas seductoras',
+    format: 'Verdadero/Falso · 40 ítems · entrenamiento de errores típicos', duration: 120, scoring: 'vf40_penalized',
+    source: 'Selección prioritaria de formulaciones falsas o matizadas, pensada para detectar enunciados engañosos.',
+    questions: BASES_HISTORICAL_BANK.filter(q => q.a === 'Falso').slice(0, 40)
+  },
+  {
+    id: 'bases-repaso-global', subjectId: 'bases', title: 'Bases · Repaso global equilibrado',
+    format: 'Verdadero/Falso · 40 ítems · todos los bloques', duration: 120, scoring: 'vf40_penalized',
+    source: 'Simulacro global equilibrado para repetir hasta estabilizar resultados.',
+    questions: basesPick(11, 9, 'repaso global equilibrado')
+  }
+);
+const BASES_TREND_SUMMARY = {
+  sources: 'Histórico reciente 2025-2026 más tests externos aportados de Daypo cuando indican examen de 40 preguntas.',
+  patterns: [
+    'El formato reciente de Bases es Verdadero/Falso con 40 ítems, 120 minutos y fórmula P = (A - E) / 4.',
+    'Se repiten familias de enunciados sobre neurona, glía, sinapsis, meninges, diencéfalo, cerebelo, sistema límbico y corteza.',
+    'Hay recurrencia alta de desarrollo prenatal, estrés, drogas, nutrición, plasticidad, periodos sensibles, mielinización y adolescencia.',
+    'Suelen aparecer trampas por intercambio de términos: semántica/morfología/pragmática, Broca/Wernicke, REM/sueño profundo, representatividad/efecto marco/anclaje/accesibilidad.',
+    'La estrategia más rentable es hacer muchos tests, revisar falsas y errores, y repetir hasta que los patrones de formulación resulten automáticos.'
+  ]
+};
+
+
 const SUBJECT_COLORS = {
   'diseno-curriculo': '#7c3aed',
   'evaluacion-centros': '#d97706',
@@ -1059,6 +1636,7 @@ function renderSubjectDetail() {
       </div>
       <div class="progress-track" style="--progress:${progress}%"><span></span></div>
       <span class="mini">Progreso de trabajo: ${progress}%${stats.count ? ` · mejor simulacro: ${stats.best.toFixed(2)}/10` : ''}</span>
+      ${s.id === 'bases' ? `<div class="notice-box bases-trends"><strong>Análisis histórico aplicado</strong><p>${BASES_TREND_SUMMARY.patterns.join(' ')}</p></div>` : ''}
     </section>
     <div class="detail-layout" style="--subject-color:${s.color}">
       <section class="grid">
@@ -1098,6 +1676,10 @@ function renderSubjectDetail() {
           ${renderAttemptHistory(s.id)}
         </article>
         <article class="card">
+          <h3>Preguntas a revisar</h3>
+          ${renderFailedReview(s.id)}
+        </article>
+        <article class="card">
           <h3>Bibliografía</h3>
           <div class="plain-list">
             ${s.bibliography.manual.map(x => `<div class="doc-item" style="--subject-color:${s.color}"><strong>Manual básico</strong><span>${escapeHtml(x)}</span></div>`).join('')}
@@ -1133,6 +1715,19 @@ function renderAttemptHistory(subjectId) {
   if (!attempts.length) return `<div class="empty">Todavía no hay intentos registrados.</div>`;
   return `<div class="plain-list">${attempts.slice(0,8).map(a => `<article class="attempt-item" style="--subject-color:${subject(subjectId).color}"><strong>${Number(a.score).toFixed(2)}/10 · ${escapeHtml(a.title)}</strong><span>${formatDate(a.date)} · ${escapeHtml(a.notes || '')}</span></article>`).join('')}</div>`;
 }
+
+function renderFailedReview(subjectId) {
+  const wrong = [];
+  state.attempts
+    .filter(a => a.subjectId === subjectId && Array.isArray(a.answers))
+    .slice(0, 10)
+    .forEach(a => a.answers.forEach((d, idx) => {
+      if (!d.ok) wrong.push({ ...d, title: a.title, date: a.date, idx: idx + 1 });
+    }));
+  if (!wrong.length) return `<div class="empty">Cuando falles o dejes preguntas en blanco, aparecerán aquí con su corrección.</div>`;
+  return `<div class="plain-list">${wrong.slice(0, 12).map(d => `<article class="doc-item" style="--subject-color:#b33a3a"><strong>${escapeHtml(d.title)} · pregunta ${d.idx}</strong><span>${escapeHtml(d.question)}</span><span>Tu respuesta: ${escapeHtml(d.given || 'en blanco')} · Correcta: ${escapeHtml(d.correct)}</span>${d.exp ? `<span>${escapeHtml(d.exp)}</span>` : ''}</article>`).join('')}</div>`;
+}
+
 function renderSpecialTrack(subjectId) {
   const tasks = SPECIAL_TRACKS[subjectId] || [];
   return `<div class="task-list">${tasks.map((task, i) => {
@@ -1251,7 +1846,7 @@ async function correctSimulation(event) {
     <p class="muted">${escapeHtml(scoringNote)}</p>
     <div class="plain-list">${details.map((d,i) => `<article class="doc-item" style="--subject-color:${d.ok ? '#28745a' : '#b33a3a'}"><strong>${i+1}. ${d.ok ? 'Correcta' : 'Revisar'}</strong><span>Tu respuesta: ${escapeHtml(d.given || 'en blanco')}</span><span>Correcta: ${escapeHtml(d.correct)}</span>${d.exp ? `<span>${escapeHtml(d.exp)}</span>` : ''}</article>`).join('')}</div>
   </div>`;
-  const attempt = { id: crypto.randomUUID(), subjectId: currentSimulation.subjectId, title: currentSimulation.title, score, date: todayISO(), notes: `${correct}/${currentSimulation.questions.length} aciertos · ${errors} errores · ${blank} blancos` };
+  const attempt = { id: crypto.randomUUID(), subjectId: currentSimulation.subjectId, title: currentSimulation.title, score, date: todayISO(), notes: `${correct}/${currentSimulation.questions.length} aciertos · ${errors} errores · ${blank} blancos`, answers: details };
   state.attempts = [attempt, ...state.attempts];
   saveLocalState();
   if (session) {
