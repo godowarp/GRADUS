@@ -3,157 +3,129 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#123c37">
-  <meta name="description" content="GRADUS, web-app personal para la gestión del Grado en Pedagogía UNED con biblioteca privada y planificación por cuatrimestres.">
-  <title>GRADUS · Pedagogía UNED</title>
+  <meta name="theme-color" content="#efe9dd">
+  <title>GRADUS</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="assets/icon-192.png">
-  <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="app-shell">
+  <div id="loginScreen" class="login-screen" hidden>
+    <section class="login-card" aria-labelledby="loginTitle">
+      <div class="login-logo" aria-hidden="true">G</div>
+      <p class="login-kicker">Pedagogía UNED</p>
+      <h1 id="loginTitle">GRADUS</h1>
+      <p class="login-subtitle">Tu escritorio privado de estudio, materiales, calendario y simulacros.</p>
+      <form id="loginForm" class="login-form">
+        <label>Correo
+          <input name="email" type="email" autocomplete="email" required placeholder="tu correo">
+        </label>
+        <label>Contraseña
+          <input name="password" type="password" autocomplete="current-password" minlength="6" required placeholder="contraseña de GRADUS">
+        </label>
+        <p id="loginMessage" class="form-message" aria-live="polite"></p>
+        <button class="main-button" type="submit" name="action" value="login">Entrar</button>
+        <button class="text-button" type="submit" name="action" value="signup">Crear cuenta</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="appShell" class="app-shell" hidden>
     <aside class="sidebar" aria-label="Navegación principal">
-      <div class="brand-block">
+      <div class="brand">
         <div class="brand-mark" aria-hidden="true">G</div>
         <div>
           <h1>GRADUS</h1>
-          <p>Pedagogía UNED · 2026-2027</p>
+          <p>Curso 2026-2027</p>
         </div>
       </div>
-      <nav class="main-nav" id="mainNav">
-        <button class="nav-item active" data-view="inicio"><span>⌂</span>Inicio</button>
-        <button class="nav-item" data-view="calendario"><span>□</span>Calendario</button>
-        <button class="nav-item" data-view="asignaturas"><span>◫</span>Asignaturas</button>
-        <button class="nav-item" data-view="materiales"><span>▤</span>Materiales</button>
-        <button class="nav-item" data-view="examenes"><span>◇</span>Exámenes</button>
-        <button class="nav-item" data-view="simulacros"><span>◎</span>Simulacros</button>
-        <button class="nav-item" data-view="planificacion"><span>✦</span>Planificación</button>
-        <button class="nav-item" data-view="notas"><span>✧</span>Notas</button>
-        <button class="nav-item" data-view="progreso"><span>◉</span>Progreso</button>
-        <button class="nav-item" data-view="ajustes"><span>⚙</span>Ajustes</button>
+      <nav class="main-nav">
+        <button class="nav-link active" data-view="desk">Escritorio</button>
+        <button class="nav-link" data-view="subjects">Asignaturas</button>
+        <button class="nav-link" data-view="calendar">Calendario</button>
+        <button class="nav-link" data-view="simulations">Simulacros</button>
+        <button class="nav-link" data-view="settings">Cuenta y avisos</button>
       </nav>
-      <div class="version-pill">Versión 0.8</div>
+      <button id="signOutBtn" class="quiet-button">Cerrar sesión</button>
     </aside>
 
-    <main class="content-area">
+    <main class="main-panel">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Panel de dirección académica</p>
-          <h2 id="viewTitle">Inicio</h2>
-          <div class="topbar-meta">
-            <span id="syncStatus" class="sync-indicator local">Modo local</span>
-            <span id="sessionLabel" class="session-label">Sin sesión</span>
-          </div>
+          <p class="small-label">Entorno personal de aprendizaje</p>
+          <h2 id="viewTitle">Escritorio</h2>
         </div>
-        <div class="topbar-controls">
-          <label class="global-filter">Cuatrimestre
-            <select id="globalSemesterFilter">
-              <option value="all">Todo el curso</option>
-              <option value="primer_cuatrimestre">Primer cuatrimestre</option>
-              <option value="segundo_cuatrimestre">Segundo cuatrimestre</option>
-              <option value="anual">Anuales / TFG</option>
-              <option value="pendiente">Pendiente de clasificar</option>
-            </select>
-          </label>
-          <button id="focusModeBtn" class="ghost-button focus-toggle" type="button" aria-pressed="false">Modo foco</button>
-          <button id="authBtn" class="ghost-button">Conectar Supabase</button>
-          <button id="quickAddBtn" class="primary-action">+ Añadir fecha</button>
+        <div class="topbar-actions">
+          <button id="studyTodayBtn" class="study-button">He estudiado hoy</button>
+          <button id="addEventBtn" class="main-button small">Añadir fecha</button>
         </div>
       </header>
-
-      <section id="inicio" class="view active-view" aria-labelledby="viewTitle"></section>
-      <section id="calendario" class="view" aria-labelledby="viewTitle"></section>
-      <section id="asignaturas" class="view" aria-labelledby="viewTitle"></section>
-      <section id="materiales" class="view" aria-labelledby="viewTitle"></section>
-      <section id="examenes" class="view" aria-labelledby="viewTitle"></section>
-      <section id="simulacros" class="view" aria-labelledby="viewTitle"></section>
-      <section id="planificacion" class="view" aria-labelledby="viewTitle"></section>
-      <section id="notas" class="view" aria-labelledby="viewTitle"></section>
-      <section id="progreso" class="view" aria-labelledby="viewTitle"></section>
-      <section id="ajustes" class="view" aria-labelledby="viewTitle"></section>
+      <section id="desk" class="view active-view"></section>
+      <section id="subjects" class="view"></section>
+      <section id="calendar" class="view"></section>
+      <section id="simulations" class="view"></section>
+      <section id="settings" class="view"></section>
     </main>
   </div>
 
-  <dialog id="eventDialog" class="modal-card">
+  <dialog id="eventDialog" class="dialog">
     <form method="dialog" id="eventForm">
-      <div class="modal-header">
-        <h3>Añadir fecha importante</h3>
-        <button class="icon-button" value="cancel" aria-label="Cerrar">×</button>
+      <div class="dialog-head">
+        <h3>Nueva fecha</h3>
+        <button class="close-button" value="cancel" aria-label="Cerrar">×</button>
       </div>
       <div class="form-grid">
-        <label>Título
-          <input name="title" type="text" required placeholder="PEC, examen, tutoría...">
-        </label>
         <label>Asignatura
-          <select name="subjectId" id="eventSubjectSelect" required></select>
+          <select name="subjectId" required></select>
         </label>
         <label>Tipo
           <select name="type" required>
             <option value="Entrega">Entrega</option>
             <option value="Examen">Examen</option>
             <option value="Tutoría">Tutoría</option>
-            <option value="Repaso">Repaso</option>
-            <option value="Aviso">Aviso</option>
+            <option value="Estudio">Estudio</option>
+            <option value="Otro">Otro</option>
           </select>
+        </label>
+        <label class="span-2">Título
+          <input name="title" type="text" required placeholder="Ej.: entrega PEC, examen primera semana...">
         </label>
         <label>Fecha
           <input name="date" type="date" required>
         </label>
+        <label>Aviso
+          <select name="notice">
+            <option value="7">7 días antes</option>
+            <option value="3">3 días antes</option>
+            <option value="1">1 día antes</option>
+            <option value="0">El mismo día</option>
+          </select>
+        </label>
         <label class="span-2">Notas
-          <textarea name="notes" rows="3" placeholder="Criterios, enlace, observaciones..."></textarea>
+          <textarea name="notes" rows="3" placeholder="Detalles, aula, instrucciones o criterio de entrega"></textarea>
         </label>
       </div>
-      <div class="modal-actions">
-        <button value="cancel" class="secondary-button">Cancelar</button>
-        <button value="default" class="primary-action">Guardar</button>
+      <div class="dialog-actions">
+        <button class="quiet-button" value="cancel">Cancelar</button>
+        <button class="main-button" value="default">Guardar</button>
       </div>
     </form>
   </dialog>
 
-  <dialog id="authDialog" class="modal-card">
-    <form method="dialog" id="authForm">
-      <div class="modal-header">
-        <h3>Conexión privada con Supabase</h3>
-        <button class="icon-button" value="cancel" aria-label="Cerrar">×</button>
-      </div>
-      <div class="form-grid">
-        <div class="notice span-2">
-          <strong>Regla de seguridad</strong>
-          Usa contraseña propia de GRADUS. No introduzcas aquí la contraseña real de la UNED.
-        </div>
-        <label class="span-2">Correo
-          <input name="email" type="email" autocomplete="email" placeholder="tu correo UNED o personal">
-        </label>
-        <label class="span-2">Contraseña de GRADUS
-          <input name="password" type="password" autocomplete="current-password" minlength="6" placeholder="mínimo 6 caracteres">
-        </label>
-        <p id="authMessage" class="form-message span-2"></p>
-      </div>
-      <div class="modal-actions auth-actions">
-        <button value="cancel" class="secondary-button">Cerrar</button>
-        <button type="button" id="logoutBtn" class="danger-button">Cerrar sesión</button>
-        <button type="submit" name="authAction" value="signup" class="ghost-button">Crear cuenta</button>
-        <button type="submit" name="authAction" value="login" class="primary-action">Entrar</button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog id="subjectDialog" class="modal-card large-modal">
-    <div class="modal-header">
+  <dialog id="subjectDialog" class="dialog wide">
+    <div class="dialog-head">
       <h3 id="subjectDialogTitle">Asignatura</h3>
-      <button id="closeSubjectDialog" class="icon-button" aria-label="Cerrar">×</button>
+      <button id="closeSubjectDialog" class="close-button" aria-label="Cerrar">×</button>
     </div>
     <div id="subjectDialogBody"></div>
   </dialog>
 
-  <template id="emptyStateTemplate">
-    <div class="empty-state">
-      <div aria-hidden="true">◌</div>
-      <h3>No hay información registrada todavía</h3>
-      <p>Cuando añadas datos, aparecerán aquí ordenados por prioridad.</p>
+  <dialog id="simulationDialog" class="dialog wide">
+    <div class="dialog-head">
+      <h3 id="simulationTitle">Simulacro</h3>
+      <button id="closeSimulationDialog" class="close-button" aria-label="Cerrar">×</button>
     </div>
-  </template>
+    <div id="simulationBody"></div>
+  </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="supabase-config.js" defer></script>
