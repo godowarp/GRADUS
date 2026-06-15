@@ -852,3 +852,81 @@ input[type="file"] {
   .section-heading { display: grid; }
   .section-heading .ghost-button { width: 100%; }
 }
+
+/* GRADUS v0.6: calculadora de notas y escenarios */
+.result-panel {
+  border: 1px dashed rgba(15,61,53,.18);
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(255,255,255,.62);
+  margin-top: 10px;
+}
+.result-panel h4 {
+  margin: 16px 0 10px;
+}
+.small-result:empty {
+  display: none;
+}
+.score-meter {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  min-height: 92px;
+  border-radius: 22px;
+  background: rgba(15,61,53,.08);
+  color: var(--primary);
+  margin-bottom: 14px;
+}
+.score-meter strong {
+  font-size: clamp(2.4rem, 8vw, 4.1rem);
+  line-height: 1;
+}
+.score-meter span {
+  color: var(--muted);
+  font-weight: 800;
+}
+.score-meter.passed {
+  background: rgba(35,121,89,.12);
+  color: var(--success);
+}
+.score-meter.failed {
+  background: rgba(177,52,52,.1);
+  color: var(--danger);
+}
+.grade-targets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.target-card {
+  border: 1px solid rgba(15,61,53,.1);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(245,242,234,.72);
+}
+.target-card strong,
+.target-card span {
+  display: block;
+}
+.target-card strong {
+  color: var(--primary);
+  font-size: 1.2rem;
+}
+.target-card span {
+  color: var(--muted);
+  margin-top: 4px;
+  font-size: .86rem;
+  line-height: 1.35;
+}
+.compact-list .list-item {
+  padding: 12px 0;
+}
+.danger-notice {
+  border-left-color: var(--danger);
+}
+@media (max-width: 820px) {
+  .score-meter {
+    min-height: 76px;
+  }
+}

@@ -2,7 +2,7 @@
   "name": "GRADUS · Pedagogía UNED",
   "short_name": "GRADUS",
   "description": "GRADUS, web-app personal para la gestión del Grado en Pedagogía UNED con biblioteca privada y planificación por cuatrimestres.",
-  "start_url": "./index.html?v=0.5",
+  "start_url": "./index.html?v=0.6",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

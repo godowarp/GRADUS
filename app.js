@@ -1,6 +1,6 @@
-const APP_VERSION = '0.5';
-const STORAGE_KEY = 'gradus.v0.5.state';
-const LEGACY_STORAGE_KEYS = ['gradus.v0.4.state', 'gradus.v0.3.state', 'gradus.v0.2.state', 'gradus.v0.1.state'];
+const APP_VERSION = '0.6';
+const STORAGE_KEY = 'gradus.v0.6.state';
+const LEGACY_STORAGE_KEYS = ['gradus.v0.5.state', 'gradus.v0.4.state', 'gradus.v0.3.state', 'gradus.v0.2.state', 'gradus.v0.1.state'];
 const MATERIAL_BUCKET = 'gradus-materials';
 
 const SEMESTERS = {
@@ -213,7 +213,8 @@ const DEFAULT_STATE = {
     }
   ],
   attempts: [],
-  questions: []
+  questions: [],
+  gradeRules: {}
 };
 
 let state = loadState();
@@ -316,7 +317,8 @@ function normalizeState(rawState) {
     materials: Array.isArray(rawState?.materials) ? rawState.materials : base.materials,
     exams: Array.isArray(rawState?.exams) ? rawState.exams : base.exams,
     attempts: Array.isArray(rawState?.attempts) ? rawState.attempts : [],
-    questions: Array.isArray(rawState?.questions) ? rawState.questions : []
+    questions: Array.isArray(rawState?.questions) ? rawState.questions : [],
+    gradeRules: rawState?.gradeRules && typeof rawState.gradeRules === 'object' ? rawState.gradeRules : {}
   };
 
   merged.events = merged.events.map(event => ({ ...event, id: event.id || cryptoRandomId(), semester: itemSemester(event) }));
@@ -849,6 +851,7 @@ function setView(viewId) {
     examenes: 'Exámenes',
     simulacros: 'Simulacros',
     planificacion: 'Planificación',
+    notas: 'Notas',
     progreso: 'Progreso',
     ajustes: 'Ajustes'
   };
@@ -1065,6 +1068,7 @@ function renderView(viewId) {
     examenes: renderExams,
     simulacros: renderSimulations,
     planificacion: renderPlanning,
+    notas: renderGrades,
     progreso: renderProgress,
     ajustes: renderSettings
   };
@@ -1951,6 +1955,312 @@ function renderPlanning() {
   attachSubjectButtons();
 }
 
+
+function defaultGradeRuleForSubject(subjectId) {
+  const subject = subjectById(subjectId) || filteredSubjects()[0] || state.subjects[0] || {};
+  const evaluation = String(subject.evaluation || '').toLowerCase();
+  const examType = String(subject.examType || '').toLowerCase();
+  let examWeight = 100;
+  let pecWeight = 0;
+  let minExamForPec = 5;
+  let minPec = 5;
+  let minPass = 5;
+
+  if (evaluation.includes('80') && evaluation.includes('20')) {
+    examWeight = 80;
+    pecWeight = 20;
+  } else if (evaluation.includes('70') && evaluation.includes('30')) {
+    examWeight = 70;
+    pecWeight = 30;
+  } else if (evaluation.includes('60') && evaluation.includes('40')) {
+    examWeight = 60;
+    pecWeight = 40;
+  }
+
+  return {
+    subjectId: subject.id,
+    examWeight,
+    pecWeight,
+    minExamForPec,
+    minPec,
+    minPass,
+    maxNoPec: examWeight < 100 ? Number((examWeight / 10).toFixed(1)) : 10,
+    testItems: examType.includes('20') ? 20 : 30,
+    options: 3,
+    developmentWeight: examType.includes('desarrollo') || examType.includes('mixto') ? 20 : 0,
+    notes: 'Regla editable. Debe revisarse con la guía oficial de la asignatura.'
+  };
+}
+
+function gradeRuleForSubject(subjectId) {
+  const fallback = defaultGradeRuleForSubject(subjectId);
+  const saved = state.gradeRules?.[subjectId] || {};
+  return { ...fallback, ...saved, subjectId };
+}
+
+function saveGradeRule(subjectId, rule) {
+  state.gradeRules = state.gradeRules || {};
+  state.gradeRules[subjectId] = {
+    examWeight: Number(rule.examWeight || 0),
+    pecWeight: Number(rule.pecWeight || 0),
+    minExamForPec: Number(rule.minExamForPec || 0),
+    minPec: Number(rule.minPec || 0),
+    minPass: Number(rule.minPass || 5),
+    maxNoPec: Number(rule.maxNoPec || 10),
+    testItems: Number(rule.testItems || 0),
+    options: Number(rule.options || 3),
+    developmentWeight: Number(rule.developmentWeight || 0),
+    notes: String(rule.notes || '')
+  };
+}
+
+function normalizeGradeInput(value) {
+  const num = Number(String(value || '').replace(',', '.'));
+  if (Number.isNaN(num)) return 0;
+  return Math.max(0, Math.min(10, num));
+}
+
+function calculateFinalGrade({ examScore, pecScore, hasPec, rule }) {
+  const examWeight = Math.max(0, Number(rule.examWeight || 0)) / 100;
+  const pecWeight = Math.max(0, Number(rule.pecWeight || 0)) / 100;
+  const minExamForPec = Number(rule.minExamForPec || 0);
+  const minPec = Number(rule.minPec || 0);
+  const minPass = Number(rule.minPass || 5);
+  const pecApplies = Boolean(hasPec && pecWeight > 0 && examScore >= minExamForPec && pecScore >= minPec);
+  const maxNoPec = Number(rule.maxNoPec || 10);
+  const finalScore = pecApplies ? (examScore * examWeight) + (pecScore * pecWeight) : Math.min(examScore, maxNoPec);
+  return {
+    finalScore: Math.max(0, Math.min(10, Number(finalScore.toFixed(2)))),
+    pecApplies,
+    passed: finalScore >= minPass,
+    examContribution: Number((pecApplies ? examScore * (examWeight || 1) : Math.min(examScore, maxNoPec)).toFixed(2)),
+    pecContribution: pecApplies ? Number((pecScore * pecWeight).toFixed(2)) : 0
+  };
+}
+
+function neededExamForTarget(target, pecScore, hasPec, rule) {
+  const examWeight = Math.max(0, Number(rule.examWeight || 0)) / 100;
+  const pecWeight = Math.max(0, Number(rule.pecWeight || 0)) / 100;
+  if (!examWeight) return null;
+  let needed = target;
+  if (hasPec && pecWeight > 0 && pecScore >= Number(rule.minPec || 0)) {
+    needed = (target - pecScore * pecWeight) / examWeight;
+    needed = Math.max(needed, Number(rule.minExamForPec || 0));
+  }
+  if (needed < 0) needed = 0;
+  if (!(hasPec && pecWeight > 0 && pecScore >= Number(rule.minPec || 0)) && needed > Number(rule.maxNoPec || 10)) return null;
+  if (needed > 10) return null;
+  return Number(needed.toFixed(2));
+}
+
+function calculateTestScore({ items, options, correct, wrong, blank }) {
+  const totalItems = Math.max(1, Number(items || 1));
+  const optionCount = Math.max(2, Number(options || 3));
+  const c = Math.max(0, Number(correct || 0));
+  const w = Math.max(0, Number(wrong || 0));
+  const b = Math.max(0, Number(blank || 0));
+  const penalty = w / (optionCount - 1);
+  const raw = Math.max(0, c - penalty);
+  const score = Math.max(0, Math.min(10, raw / totalItems * 10));
+  return {
+    score: Number(score.toFixed(2)),
+    raw: Number(raw.toFixed(2)),
+    penalty: Number(penalty.toFixed(2)),
+    answered: c + w + b,
+    warning: c + w + b !== totalItems ? 'La suma de correctas, erróneas y en blanco no coincide con el número de preguntas.' : ''
+  };
+}
+
+function renderGradeTargets(rule, pecScore, hasPec) {
+  const targets = [5, 7, 9, 9.5];
+  return `<div class="grade-targets">${targets.map(target => {
+    const needed = neededExamForTarget(target, pecScore, hasPec, rule);
+    return `<div class="target-card"><strong>${target}</strong><span>${needed === null ? 'No alcanzable con estos datos' : `Necesitas ${needed} en examen`}</span></div>`;
+  }).join('')}</div>`;
+}
+
+function gradeScenarioAttempts() {
+  return state.attempts
+    .filter(attempt => String(attempt.title || '').startsWith('Escenario de nota'))
+    .filter(matchesSemester)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function renderGradeScenarioList() {
+  const attempts = gradeScenarioAttempts();
+  if (!attempts.length) return renderEmptyState();
+  return `<div class="list">${attempts.map(attempt => `
+    <div class="list-item">
+      <div>
+        <strong>${escapeHtml(attempt.title)}</strong>
+        <p>${escapeHtml(subjectName(attempt.subjectId))} · ${formatDate(attempt.date)}</p>
+        <p>${escapeHtml(attempt.notes || '')}</p>
+        <div class="inline-actions"><button class="tiny-button danger-text" data-delete-collection="attempts" data-delete-id="${escapeHtml(attempt.id)}">Eliminar escenario</button></div>
+      </div>
+      <div class="badge-stack">
+        ${semesterBadge(itemSemester(attempt))}
+        <span class="badge primary">${escapeHtml(attempt.score ?? 'Sin nota')}</span>
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
+function renderGrades() {
+  const subjects = filteredSubjects().length ? filteredSubjects() : state.subjects;
+  const selectedSubjectId = subjects[0]?.id || state.subjects[0]?.id;
+  const rule = gradeRuleForSubject(selectedSubjectId);
+  const subject = subjectById(selectedSubjectId) || {};
+
+  $('#notas').innerHTML = `
+    <div class="grid-12">
+      <article class="card col-7">
+        <div class="section-heading">
+          <div>
+            <h3>Calculadora de nota final</h3>
+            <p>Calcula escenarios con examen, PEC y mínimos. Las reglas son editables y deben contrastarse con cada guía.</p>
+          </div>
+        </div>
+        <form id="finalGradeForm" class="form-grid">
+          <label class="span-2">Asignatura
+            <select name="subjectId" id="gradeSubjectSelect" required>${subjects.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)} · ${semesterLabel(item.semester)}</option>`).join('')}</select>
+          </label>
+          <label>Nota examen<input name="examScore" type="number" min="0" max="10" step="0.01" value="5" required></label>
+          <label>Nota PEC/trabajo<input name="pecScore" type="number" min="0" max="10" step="0.01" value="8"></label>
+          <label>Peso examen %<input name="examWeight" type="number" min="0" max="100" step="1" value="${escapeHtml(rule.examWeight)}"></label>
+          <label>Peso PEC %<input name="pecWeight" type="number" min="0" max="100" step="1" value="${escapeHtml(rule.pecWeight)}"></label>
+          <label>Mínimo examen para sumar PEC<input name="minExamForPec" type="number" min="0" max="10" step="0.01" value="${escapeHtml(rule.minExamForPec)}"></label>
+          <label>Mínimo PEC<input name="minPec" type="number" min="0" max="10" step="0.01" value="${escapeHtml(rule.minPec)}"></label>
+          <label>Mínimo para aprobar<input name="minPass" type="number" min="0" max="10" step="0.01" value="${escapeHtml(rule.minPass)}"></label>
+          <label>Máx. sin PEC<input name="maxNoPec" type="number" min="0" max="10" step="0.01" value="${escapeHtml(rule.maxNoPec)}"></label>
+          <label>Aplicar PEC
+            <select name="hasPec"><option value="yes" selected>Sí, si cumple mínimos</option><option value="no">No</option></select>
+          </label>
+          <label class="span-2">Notas de la regla<textarea name="ruleNotes" rows="2">${escapeHtml(rule.notes || '')}</textarea></label>
+          <div class="modal-actions span-2" style="padding:0">
+            <button class="secondary-button" type="button" id="loadSubjectRuleBtn">Cargar regla de la asignatura</button>
+            <button class="primary-action" type="submit">Calcular y guardar escenario</button>
+          </div>
+        </form>
+      </article>
+
+      <article class="card col-5">
+        <h3>Resultado</h3>
+        <div id="gradeResult" class="result-panel">
+          <p class="subtle-note">Introduce los datos y pulsa calcular. Para Métodos, GRADUS detecta por defecto la estructura 80% examen y 20% PEC, pero debe revisarse siempre con la guía vigente.</p>
+          <div class="notice"><strong>Control de rigor</strong> La calculadora ayuda a planificar, pero la regla oficial siempre será la guía de la asignatura.</div>
+        </div>
+      </article>
+
+      <article class="card col-5">
+        <h3>Calculadora de test con penalización</h3>
+        <form id="testScoreForm" class="form-grid">
+          <label>N.º preguntas<input name="items" type="number" min="1" value="${escapeHtml(rule.testItems || 20)}"></label>
+          <label>Opciones por pregunta<input name="options" type="number" min="2" value="${escapeHtml(rule.options || 3)}"></label>
+          <label>Correctas<input name="correct" type="number" min="0" value="0"></label>
+          <label>Erróneas<input name="wrong" type="number" min="0" value="0"></label>
+          <label>En blanco<input name="blank" type="number" min="0" value="0"></label>
+          <button class="primary-action">Calcular test</button>
+        </form>
+        <div id="testResult" class="result-panel small-result"></div>
+      </article>
+
+      <article class="card col-7">
+        <h3>Escenarios guardados</h3>
+        <p class="subtle-note">Se guardan como intentos de simulacro para aprovechar la sincronización existente sin añadir más tablas.</p>
+        <div id="gradeScenarioList">${renderGradeScenarioList()}</div>
+      </article>
+    </div>
+  `;
+
+  const form = $('#finalGradeForm');
+  const select = $('#gradeSubjectSelect');
+  select.value = selectedSubjectId;
+  select.addEventListener('change', () => populateGradeRuleForm(select.value));
+  $('#loadSubjectRuleBtn').addEventListener('click', () => populateGradeRuleForm(select.value));
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const subjectId = String(data.get('subjectId'));
+    const currentRule = {
+      examWeight: Number(data.get('examWeight') || 0),
+      pecWeight: Number(data.get('pecWeight') || 0),
+      minExamForPec: Number(data.get('minExamForPec') || 0),
+      minPec: Number(data.get('minPec') || 0),
+      minPass: Number(data.get('minPass') || 5),
+      maxNoPec: Number(data.get('maxNoPec') || 10),
+      testItems: gradeRuleForSubject(subjectId).testItems,
+      options: gradeRuleForSubject(subjectId).options,
+      notes: String(data.get('ruleNotes') || '')
+    };
+    saveGradeRule(subjectId, currentRule);
+    const examScore = normalizeGradeInput(data.get('examScore'));
+    const pecScore = normalizeGradeInput(data.get('pecScore'));
+    const hasPec = data.get('hasPec') === 'yes';
+    const result = calculateFinalGrade({ examScore, pecScore, hasPec, rule: currentRule });
+    const today = new Date().toISOString().slice(0, 10);
+    state.attempts.push({
+      id: cryptoRandomId(),
+      subjectId,
+      semester: normalizeSemester(subjectById(subjectId)?.semester),
+      date: today,
+      title: `Escenario de nota · ${subjectName(subjectId)}`,
+      score: result.finalScore,
+      durationMinutes: null,
+      notes: `Examen ${examScore}; PEC ${hasPec ? pecScore : 'no aplicada'}; regla ${currentRule.examWeight}%/${currentRule.pecWeight}%; máximo sin PEC ${currentRule.maxNoPec}; PEC ${result.pecApplies ? 'aplicada' : 'no aplicada'}; resultado ${result.passed ? 'aprobado' : 'no aprobado'}.`
+    });
+    saveState();
+    renderGradeResult(subjectId, examScore, pecScore, hasPec, currentRule, result);
+  });
+
+  $('#testScoreForm').addEventListener('submit', event => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const result = calculateTestScore({
+      items: data.get('items'),
+      options: data.get('options'),
+      correct: data.get('correct'),
+      wrong: data.get('wrong'),
+      blank: data.get('blank')
+    });
+    $('#testResult').innerHTML = `
+      <div class="score-meter"><strong>${result.score}</strong><span>/10</span></div>
+      <p>Puntuación bruta: ${result.raw}. Penalización aplicada: ${result.penalty} puntos brutos.</p>
+      ${result.warning ? `<div class="notice danger-notice"><strong>Revisar</strong> ${escapeHtml(result.warning)}</div>` : ''}
+    `;
+  });
+}
+
+function populateGradeRuleForm(subjectId) {
+  const rule = gradeRuleForSubject(subjectId);
+  const form = $('#finalGradeForm');
+  if (!form) return;
+  form.elements.examWeight.value = rule.examWeight;
+  form.elements.pecWeight.value = rule.pecWeight;
+  form.elements.minExamForPec.value = rule.minExamForPec;
+  form.elements.minPec.value = rule.minPec;
+  form.elements.minPass.value = rule.minPass;
+  form.elements.maxNoPec.value = rule.maxNoPec;
+  form.elements.ruleNotes.value = rule.notes || '';
+}
+
+function renderGradeResult(subjectId, examScore, pecScore, hasPec, rule, result) {
+  const targets = renderGradeTargets(rule, pecScore, hasPec);
+  $('#gradeResult').innerHTML = `
+    <div class="score-meter ${result.passed ? 'passed' : 'failed'}"><strong>${result.finalScore}</strong><span>/10</span></div>
+    <div class="list compact-list">
+      <div class="list-item"><strong>Asignatura</strong><p>${escapeHtml(subjectName(subjectId))}</p></div>
+      <div class="list-item"><strong>Examen</strong><p>${examScore} aporta ${result.examContribution}</p></div>
+      <div class="list-item"><strong>PEC/trabajo</strong><p>${result.pecApplies ? `${pecScore} aporta ${result.pecContribution}` : 'No aplicada con esta regla'}</p></div>
+      <div class="list-item"><strong>Estado</strong><p>${result.passed ? 'Superaría la asignatura con esta simulación.' : 'No alcanzaría el mínimo configurado.'}</p></div>
+    </div>
+    <h4>Notas necesarias según objetivo</h4>
+    ${targets}
+  `;
+  const scenarioList = $('#gradeScenarioList');
+  if (scenarioList) scenarioList.innerHTML = renderGradeScenarioList();
+}
+
+
 function renderProgress() {
   const subjects = filteredSubjects();
   $('#progreso').innerHTML = `
@@ -2039,7 +2349,7 @@ function renderSettings() {
   $('#exportDataBtn').addEventListener('click', exportData);
   $('#syncNowBtn').addEventListener('click', () => persistStateToSupabase({ immediate: true }));
   $('#resetDataBtn').addEventListener('click', () => {
-    if (!confirm('¿Seguro que quieres restaurar los datos iniciales de GRADUS v0.5?')) return;
+    if (!confirm('¿Seguro que quieres restaurar los datos iniciales de GRADUS v0.6?')) return;
     state = normalizeState(DEFAULT_STATE);
     saveState();
     renderSettings();
