@@ -4,8 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f4f1ec">
+  <meta name="application-name" content="GRADUS">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="GRADUS">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>GRADUS</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./assets/icon-192.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -31,6 +37,15 @@
           <button class="secondary-button" type="submit" name="action" value="signup">Crear cuenta</button>
         </div>
       </form>
+      <div id="loginInstallBox" class="install-box" hidden>
+        <strong>Instalar GRADUS en el móvil</strong>
+        <p>Instálala para abrirla como app, hacer tests con más comodidad y preparar las notificaciones.</p>
+        <div class="install-actions">
+          <button type="button" class="secondary-button" data-install-app>Instalar</button>
+          <button type="button" class="plain-button" data-install-help>Cómo instalar</button>
+          <button type="button" class="plain-button" data-repair-pwa>Reparar carga</button>
+        </div>
+      </div>
     </section>
   </main>
 

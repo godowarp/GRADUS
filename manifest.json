@@ -1,14 +1,22 @@
 {
+  "id": "/GRADUS/",
   "name": "GRADUS",
   "short_name": "GRADUS",
   "description": "Escritorio personal de estudio para Pedagogía UNED.",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/GRADUS/?source=pwa",
+  "scope": "/GRADUS/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
   "background_color": "#f4f1ec",
   "theme_color": "#f4f1ec",
+  "categories": ["education", "productivity"],
   "icons": [
-    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Simulacros", "short_name": "Tests", "url": "/GRADUS/?view=simulations", "description": "Abrir los simulacros autocorregibles" },
+    { "name": "Calendario", "short_name": "Calendario", "url": "/GRADUS/?view=calendar", "description": "Abrir el calendario académico" }
   ]
 }

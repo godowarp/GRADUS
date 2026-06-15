@@ -1323,6 +1323,19 @@ let activeSubjectId = null;
 let calendarMode = 'month';
 let calendarDate = new Date();
 let currentSimulation = null;
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  updateInstallButtons();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  localStorage.setItem('gradus.installed', '1');
+  updateInstallButtons();
+});
 
 function loadLocalState() {
   const base = {
@@ -1366,8 +1379,69 @@ function getSupabase() {
   return window.supabase.createClient(cfg.url, cfg.anonKey);
 }
 
+function isStandaloneMode() {
+  return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function updateInstallButtons() {
+  const installed = isStandaloneMode() || localStorage.getItem('gradus.installed') === '1';
+  document.querySelectorAll('[data-install-app]').forEach(button => {
+    button.hidden = installed;
+    button.textContent = deferredInstallPrompt ? 'Instalar GRADUS' : 'Instalar / añadir';
+  });
+  const box = document.getElementById('loginInstallBox');
+  if (box) box.hidden = installed;
+}
+
+async function registerGradusServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const registration = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+    registration.update?.();
+    if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+  } catch {
+    // GRADUS sigue funcionando en modo web aunque el navegador no registre el service worker.
+  }
+}
+
+async function promptInstall() {
+  if (deferredInstallPrompt) {
+    const promptEvent = deferredInstallPrompt;
+    deferredInstallPrompt = null;
+    promptEvent.prompt();
+    await promptEvent.userChoice.catch(() => null);
+    updateInstallButtons();
+    return;
+  }
+  showInstallHelp();
+}
+
+function showInstallHelp() {
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const text = isIos
+    ? 'En iPhone o iPad abre GRADUS en Safari, toca Compartir y elige “Añadir a pantalla de inicio”. Las notificaciones web en iOS exigen que la web esté añadida a la pantalla de inicio.'
+    : 'En Android abre GRADUS en Chrome, toca el menú de tres puntos y elige “Instalar app” o “Añadir a pantalla de inicio”. Si no aparece, recarga la página una vez y vuelve a abrir el menú.';
+  alert(text);
+}
+
+async function repairPwa() {
+  const ok = confirm('Esto limpiará la caché de GRADUS en este dispositivo y recargará la app. Tus datos guardados en Supabase no se borran.');
+  if (!ok) return;
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(reg => reg.unregister()));
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter(key => key.includes('gradus')).map(key => caches.delete(key)));
+    }
+  } catch {}
+  location.reload();
+}
+
 async function init() {
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  await registerGradusServiceWorker();
   supabaseClient = getSupabase();
   bindEvents();
   if (!supabaseClient) {
@@ -1380,6 +1454,11 @@ async function init() {
 }
 function bindEvents() {
   dom.loginForm.addEventListener('submit', handleAuth);
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-install-app]')) { promptInstall(); return; }
+    if (event.target.closest('[data-install-help]')) { showInstallHelp(); return; }
+    if (event.target.closest('[data-repair-pwa]')) { repairPwa(); return; }
+  });
   dom.signOutBtn.addEventListener('click', signOut);
   dom.nav.forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
   dom.studyTodayBtn.addEventListener('click', markStudyToday);
@@ -1405,6 +1484,7 @@ function showLogin(message='') {
   dom.loginScreen.hidden = false;
   dom.loginMessage.textContent = message;
   document.body.classList.add('login-only');
+  updateInstallButtons();
 }
 async function handleAuth(event) {
   event.preventDefault();
@@ -1426,6 +1506,7 @@ async function enterApp() {
   dom.loginScreen.hidden = true;
   dom.appShell.hidden = false;
   document.body.classList.remove('login-only');
+  updateInstallButtons();
   await seedSubjects();
   await loadRemoteData();
   markVisit();
@@ -1870,12 +1951,25 @@ async function correctSimulation(event) {
 function renderSettings() {
   const el = document.getElementById('settings');
   const permission = 'Notification' in window ? Notification.permission : 'no disponible';
+  const installed = isStandaloneMode() ? 'Instalada como app' : 'Abierta en navegador';
   el.innerHTML = `<div class="grid two">
     <article class="card">
-      <h3>Notificaciones</h3>
-      <p>GRADUS avisará de fechas próximas cuando la app tenga permiso de notificación en el navegador o en la PWA instalada.</p>
+      <h3>Instalación móvil</h3>
+      <p>Instala GRADUS para abrir tests y calendario como app. Es el paso previo para que las notificaciones sean fiables en el móvil.</p>
       <div class="info-table">
-        <div class="info-row"><span>Permiso del navegador</span><span>${escapeHtml(permission)}</span></div>
+        <div class="info-row"><span>Estado</span><span>${escapeHtml(installed)}</span></div>
+        <div class="info-row"><span>Permiso de avisos</span><span>${escapeHtml(permission)}</span></div>
+      </div>
+      <div class="dialog-actions" style="padding-left:0; padding-right:0">
+        <button class="primary-button" data-install-app>Instalar GRADUS</button>
+        <button class="secondary-button" data-install-help>Cómo instalar</button>
+        <button class="plain-button" data-repair-pwa>Reparar carga</button>
+      </div>
+    </article>
+    <article class="card">
+      <h3>Notificaciones</h3>
+      <p>GRADUS puede avisar de fechas próximas y de estudio diario cuando tenga permiso del navegador.</p>
+      <div class="info-table">
         <div class="info-row"><span>Estado en GRADUS</span><span>${state.settings.notifications ? 'Activadas' : 'Desactivadas'}</span></div>
         <div class="info-row"><span>Recordatorio diario</span><span>${escapeHtml(state.settings.inactivityHour)}</span></div>
       </div>
@@ -1883,7 +1977,6 @@ function renderSettings() {
         <button class="primary-button" data-enable-notifications>Activar notificaciones</button>
         <button class="secondary-button" data-test-notification>Probar aviso</button>
       </div>
-      <div class="notice-box"><strong>Aviso técnico</strong><p class="muted">Las notificaciones funcionan mejor si GRADUS está instalada en el móvil como app. Las notificaciones push totalmente independientes de abrir la app requieren una fase posterior con servicio push.</p></div>
     </article>
     <article class="card">
       <h3>Cuenta</h3>
@@ -1892,6 +1985,7 @@ function renderSettings() {
     </article>
   </div>`;
   document.getElementById('settingsSignOut')?.addEventListener('click', signOut);
+  updateInstallButtons();
 }
 function openEventDialog() {
   const select = dom.eventForm.elements.subjectId;
@@ -2031,4 +2125,4 @@ function handleDocumentClick(event) {
   }
 }
 
-init();
+init().catch(() => showLogin('No se ha podido cargar GRADUS. Pulsa “Reparar carga” o recarga la página.'));

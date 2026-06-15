@@ -382,3 +382,45 @@ textarea { min-height: 86px; resize: vertical; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
 }
+
+/* Ajustes móviles/PWA */
+body.login-only {
+  overflow-x: hidden;
+}
+.install-box {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  border-radius: 6px;
+  background: rgba(255,255,255,.64);
+}
+.install-box p { margin: 6px 0 12px; color: var(--muted); line-height: 1.4; }
+.install-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.install-actions > * { flex: 1; min-width: 120px; }
+.pwa-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.65);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 900;
+}
+@media (max-width: 560px) {
+  .login-screen { padding: 14px; align-items: start; padding-top: max(22px, env(safe-area-inset-top)); }
+  .login-card { padding: 24px 18px; }
+  .login-card h1 { font-size: clamp(2rem, 14vw, 2.9rem); }
+  .wordmark-symbol, .brand-symbol { width: 36px; height: 36px; }
+  .topbar h2 { font-size: clamp(2rem, 13vw, 3.1rem); }
+  .subject-card { min-height: auto; }
+  .calendar-grid { gap: 3px; }
+  .day-cell { min-height: 58px; }
+  .event-chip { max-width: 100%; }
+  .dialog { width: calc(100vw - 14px); max-height: calc(100dvh - 18px); overflow: auto; }
+  .dialog.wide { width: calc(100vw - 14px); }
+  .simulationBody, #simulationBody { overflow-wrap: anywhere; }
+}
